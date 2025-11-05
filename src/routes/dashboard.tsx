@@ -147,19 +147,31 @@ dashboard.get('/', async (c) => {
 
                     <div id="telegramSetup">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fab fa-telegram text-blue-500"></i> Telegram Username (optional)
+                            <i class="fab fa-telegram text-blue-500"></i> Telegram Username
                         </label>
                         <input type="text" id="telegram_username" placeholder="@username" 
                             class="input-field">
-                        <p class="text-xs text-gray-500 mt-2 flex items-center">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Start a chat with our bot: <a href="#" class="text-purple-600 hover:underline ml-1 font-semibold">@WeatherNewsBot</a>
-                        </p>
+                        <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-xs text-gray-700 mb-2 font-semibold">
+                                <i class="fas fa-info-circle text-blue-500 mr-1"></i> Setup Instructions:
+                            </p>
+                            <ol class="text-xs text-gray-600 space-y-1 ml-4 list-decimal">
+                                <li>Enter your Telegram username above (with or without @)</li>
+                                <li>Save your channel settings</li>
+                                <li>Search for the bot and send <code class="bg-gray-200 px-1 rounded">/start</code></li>
+                                <li>Click "Connect Telegram" below to link your account</li>
+                            </ol>
+                        </div>
                     </div>
 
-                    <button onclick="saveChannel()" class="btn-primary w-full">
-                        <i class="fas fa-save mr-2"></i> Save Channel Settings
-                    </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="saveChannel()" class="btn-primary">
+                            <i class="fas fa-save mr-2"></i> Save Settings
+                        </button>
+                        <button onclick="connectTelegram()" id="connectBtn" class="btn-secondary">
+                            <i class="fab fa-telegram mr-2"></i> Connect Telegram
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -419,14 +431,56 @@ dashboard.get('/', async (c) => {
             const telegram_username = document.getElementById('telegram_username').value;
             const preferred_channel = document.querySelector('input[name="channel"]:checked').value;
             
+            if (!telegram_username) {
+                showToast('Please enter your Telegram username', 'warning');
+                return;
+            }
+            
             try {
                 await axios.post('/api/user/preferences', {
-                    telegram_username,
+                    telegram_username: telegram_username.startsWith('@') ? telegram_username : '@' + telegram_username,
                     preferred_channel
                 });
-                showToast('Channel settings saved successfully!', 'success');
+                showToast('Channel settings saved! Now connect your Telegram account.', 'success');
             } catch (error) {
                 showToast('Failed to save channel settings', 'error');
+            }
+        }
+        
+        async function connectTelegram() {
+            const telegram_username = document.getElementById('telegram_username').value;
+            
+            if (!telegram_username) {
+                showToast('Please enter and save your Telegram username first', 'warning');
+                return;
+            }
+            
+            const connectBtn = document.getElementById('connectBtn');
+            const originalText = connectBtn.innerHTML;
+            connectBtn.disabled = true;
+            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Connecting...';
+            
+            try {
+                const response = await axios.get('/api/telegram/get-chat-id');
+                if (response.data.success) {
+                    showToast(response.data.message, 'success');
+                    connectBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Connected!';
+                    setTimeout(() => {
+                        connectBtn.innerHTML = originalText;
+                        connectBtn.disabled = false;
+                    }, 3000);
+                } else {
+                    showToast(response.data.error || 'Failed to connect', 'error');
+                    if (response.data.hint) {
+                        setTimeout(() => showToast(response.data.hint, 'info'), 2000);
+                    }
+                    connectBtn.innerHTML = originalText;
+                    connectBtn.disabled = false;
+                }
+            } catch (error) {
+                showToast('Failed to connect Telegram. Make sure you sent /start to the bot.', 'error');
+                connectBtn.innerHTML = originalText;
+                connectBtn.disabled = false;
             }
         }
 
@@ -478,8 +532,25 @@ dashboard.get('/', async (c) => {
         }
 
         async function testNotification() {
-            showToast('Test notification sent! Check your Telegram', 'info');
-            // TODO: Implement actual test notification
+            try {
+                const response = await axios.post('/api/user/test-notification');
+                if (response.data.success) {
+                    showToast(response.data.message, 'success');
+                } else if (response.data.needsChatId) {
+                    showToast(response.data.error, 'warning');
+                    setTimeout(() => {
+                        showToast('Click the "Connect Telegram" button in Channel Settings', 'info');
+                    }, 2000);
+                } else {
+                    showToast(response.data.error || 'Failed to send notification', 'error');
+                }
+            } catch (error) {
+                if (error.response?.data?.error) {
+                    showToast(error.response.data.error, 'error');
+                } else {
+                    showToast('Failed to send test notification', 'error');
+                }
+            }
         }
 
         async function logout() {

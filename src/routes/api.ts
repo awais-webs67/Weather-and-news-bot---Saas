@@ -322,4 +322,153 @@ api.get('/news/:country', authMiddleware, async (c) => {
   })
 })
 
+// Get Telegram chat ID from bot updates
+api.get('/telegram/get-chat-id', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user') as User
+    
+    // Get Telegram bot token from settings
+    const settings = await c.env.DB.prepare(
+      'SELECT telegram_bot_token FROM api_settings WHERE id = 1'
+    ).first()
+    
+    if (!settings || !settings.telegram_bot_token) {
+      return c.json({ 
+        success: false, 
+        error: 'Telegram bot not configured. Please contact admin.' 
+      }, 400)
+    }
+    
+    // Import TelegramBot class
+    const { TelegramBot } = await import('../lib/integrations')
+    const bot = new TelegramBot(settings.telegram_bot_token as string)
+    
+    // Get recent updates
+    const result = await bot.getUpdates()
+    
+    if (!result.success || !result.updates) {
+      return c.json({ 
+        success: false, 
+        error: result.error || 'Failed to get updates from bot' 
+      })
+    }
+    
+    // Find messages from user
+    const userUpdates = result.updates.filter((update: any) => {
+      const message = update.message || update.edited_message
+      if (!message) return false
+      
+      const username = message.from?.username
+      const userTelegramUsername = user.telegram_username?.replace('@', '')
+      
+      return username && userTelegramUsername && username === userTelegramUsername
+    })
+    
+    if (userUpdates.length === 0) {
+      return c.json({
+        success: false,
+        error: 'No messages found from your account. Please send /start to the bot first.',
+        hint: 'Make sure you have started a chat with the bot and your username matches.'
+      })
+    }
+    
+    // Get the chat ID from the most recent message
+    const latestMessage = userUpdates[userUpdates.length - 1]
+    const chatId = latestMessage.message?.chat?.id || latestMessage.edited_message?.chat?.id
+    
+    if (!chatId) {
+      return c.json({ 
+        success: false, 
+        error: 'Could not find your chat ID. Please try again.' 
+      })
+    }
+    
+    // Update user's telegram_chat_id in database
+    await c.env.DB.prepare(`
+      UPDATE users 
+      SET telegram_chat_id = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(chatId.toString(), user.id).run()
+    
+    return c.json({
+      success: true,
+      message: 'Chat ID found and saved successfully!',
+      chatId: chatId.toString()
+    })
+  } catch (error) {
+    console.error('Get chat ID error:', error)
+    return c.json({ error: 'Failed to get chat ID' }, 500)
+  }
+})
+
+// Send test notification
+api.post('/user/test-notification', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user') as User
+    
+    // Check if user has configured telegram
+    if (!user.telegram_username) {
+      return c.json({ 
+        success: false, 
+        error: 'Please configure your Telegram username first' 
+      }, 400)
+    }
+    
+    // Get Telegram bot token from settings
+    const settings = await c.env.DB.prepare(
+      'SELECT telegram_bot_token FROM api_settings WHERE id = 1'
+    ).first()
+    
+    if (!settings || !settings.telegram_bot_token) {
+      return c.json({ 
+        success: false, 
+        error: 'Telegram bot not configured. Please contact admin.' 
+      }, 400)
+    }
+    
+    // If no chat ID, try to get it first
+    if (!user.telegram_chat_id) {
+      return c.json({
+        success: false,
+        error: 'Chat ID not found. Please click "Connect Telegram" button first.',
+        needsChatId: true
+      })
+    }
+    
+    // Import TelegramBot class
+    const { TelegramBot } = await import('../lib/integrations')
+    const bot = new TelegramBot(settings.telegram_bot_token as string)
+    
+    // Create test message
+    const testMessage = `
+🎉 <b>Test Notification from WeatherNews Alert!</b>
+
+✅ Your account is successfully connected!
+📱 You will receive weather and news updates here.
+
+This is a test message to confirm your setup is working correctly.
+
+Have a great day! ☀️
+    `.trim()
+    
+    // Send message
+    const result = await bot.sendMessage(user.telegram_chat_id, testMessage)
+    
+    if (result.success) {
+      return c.json({
+        success: true,
+        message: 'Test notification sent successfully! Check your Telegram.'
+      })
+    } else {
+      return c.json({
+        success: false,
+        error: result.error || 'Failed to send message. Please try reconnecting your Telegram.'
+      })
+    }
+  } catch (error) {
+    console.error('Test notification error:', error)
+    return c.json({ error: 'Failed to send test notification' }, 500)
+  }
+})
+
 export default api
