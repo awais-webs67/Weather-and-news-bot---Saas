@@ -129,6 +129,80 @@ dashboard.get('/', async (c) => {
             </div>
         </div>
 
+        <!-- Subscription & Pricing -->
+        <div class="glass-card mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gradient-text">
+                    <i class="fas fa-crown mr-3"></i>
+                    Subscription & Billing
+                </h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Current Plan -->
+                <div class="col-span-1">
+                    <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl">
+                        <p class="text-teal-100 text-sm mb-2">Current Plan</p>
+                        <p class="text-3xl font-bold mb-4" id="currentPlan">Free Trial</p>
+                        <p class="text-sm text-teal-100">Expires: <span id="planExpiry">-</span></p>
+                    </div>
+                    
+                    <div class="mt-4" id="activationSection">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-key"></i> Have a License Key?
+                        </label>
+                        <input type="text" id="licenseKeyInput" placeholder="XXXX-XXXX-XXXX-XXXX" 
+                            class="input-field mb-3" maxlength="19">
+                        <button onclick="activateLicense()" class="btn-primary w-full">
+                            <i class="fas fa-check-circle mr-2"></i> Activate License
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Pricing Plans -->
+                <div class="col-span-2 grid md:grid-cols-2 gap-4">
+                    <!-- Monthly Plan -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-teal-500 transition">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Monthly</h3>
+                            <span class="badge badge-primary">Popular</span>
+                        </div>
+                        <p class="text-4xl font-bold mb-2">$9.99<span class="text-lg text-gray-500">/mo</span></p>
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Unlimited weather updates</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Daily news summaries</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> 7-day forecasts</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Multi-language support</li>
+                        </ul>
+                        <button onclick="requestPayment('monthly')" class="btn-primary w-full">
+                            <i class="fab fa-whatsapp mr-2"></i> Pay via WhatsApp
+                        </button>
+                    </div>
+                    
+                    <!-- Yearly Plan -->
+                    <div class="border-2 border-teal-500 bg-teal-50 rounded-xl p-6 relative">
+                        <div class="absolute -top-3 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                            SAVE 20%
+                        </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Yearly</h3>
+                            <span class="badge badge-success">Best Value</span>
+                        </div>
+                        <p class="text-4xl font-bold mb-2">$95.99<span class="text-lg text-gray-500">/yr</span></p>
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> All Monthly features</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> AI-powered insights</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Priority support</li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Save $24/year</li>
+                        </ul>
+                        <button onclick="requestPayment('yearly')" class="btn-primary w-full">
+                            <i class="fab fa-whatsapp mr-2"></i> Pay via WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="grid lg:grid-cols-2 gap-6">
             <!-- Channel Setup Card -->
             <div class="glass-card">
@@ -608,6 +682,42 @@ dashboard.get('/', async (c) => {
                 } else {
                     showToast('Failed to send test notification', 'error');
                 }
+            }
+        }
+
+        async function activateLicense() {
+            const licenseKey = document.getElementById('licenseKeyInput').value.trim().toUpperCase();
+            
+            if (!licenseKey) {
+                showToast('Please enter a license key', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await axios.post('/api/user/activate-license', { licenseKey });
+                if (response.data.success) {
+                    showToast('License activated successfully! 🎉', 'success');
+                    document.getElementById('licenseKeyInput').value = '';
+                    await loadProfile();
+                } else {
+                    showToast(response.data.error || 'Failed to activate', 'error');
+                }
+            } catch (error) {
+                showToast(error.response?.data?.error || 'Invalid license key', 'error');
+            }
+        }
+
+        async function requestPayment(planType) {
+            try {
+                const response = await axios.post('/api/user/request-payment', { planType });
+                if (response.data.success) {
+                    showToast(\`Opening WhatsApp for \${response.data.plan}...\`, 'info');
+                    setTimeout(() => {
+                        window.open(response.data.whatsappLink, '_blank');
+                    }, 1000);
+                }
+            } catch (error) {
+                showToast('Error creating payment request', 'error');
             }
         }
 
