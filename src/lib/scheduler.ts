@@ -11,9 +11,9 @@ export class MessageScheduler {
     try {
       // Get current time in UTC
       const now = new Date()
-      const currentTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
+      const currentTimeUTC = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
       
-      console.log(`Running scheduler at ${currentTime} UTC`)
+      console.log(`Running scheduler at ${currentTimeUTC} UTC`)
       
       // Get bot token
       const botSettings = await this.db.prepare(
@@ -38,7 +38,7 @@ export class MessageScheduler {
       const bot = new TelegramBot(botSettings.setting_value as string)
       const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
       
-      // Get all active schedules for current time (within ±2 minutes to handle cron timing)
+      // Get all active schedules (we'll check timezone manually)
       const schedules = await this.db.prepare(`
         SELECT 
           s.*,
@@ -55,12 +55,21 @@ export class MessageScheduler {
         WHERE s.is_enabled = 1
           AND u.telegram_chat_id IS NOT NULL
           AND u.subscription_status = 'active'
-          AND s.delivery_time = ?
-      `).bind(currentTime).all()
+      `).all()
       
-      console.log(`Found ${schedules.results.length} schedules to process`)
+      // Import timezone utilities
+      const { getCurrentTimeInTimezone } = await import('./timezone')
       
-      for (const schedule of schedules.results) {
+      // Filter schedules by checking user's local time
+      const matchingSchedules = schedules.results.filter((schedule: any) => {
+        const userTimezone = schedule.timezone || 'UTC'
+        const userLocalTime = getCurrentTimeInTimezone(userTimezone)
+        return userLocalTime === schedule.delivery_time
+      })
+      
+      console.log(`Found ${matchingSchedules.length} schedules to process (out of ${schedules.results.length} total)`)
+      
+      for (const schedule of matchingSchedules) {
         try {
           let message = ''
           

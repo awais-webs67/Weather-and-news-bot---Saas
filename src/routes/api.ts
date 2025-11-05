@@ -206,6 +206,10 @@ api.post('/user/preferences', authMiddleware, async (c) => {
     
     // Update or insert location
     if (country && city) {
+      // Get timezone from country
+      const { getTimezoneForCountry } = await import('../lib/timezone')
+      const userTimezone = getTimezoneForCountry(country)
+      
       const existingLocation = await c.env.DB.prepare(
         'SELECT id FROM locations WHERE user_id = ?'
       ).bind(user.id).first()
@@ -218,7 +222,7 @@ api.post('/user/preferences', authMiddleware, async (c) => {
         `).bind(
           sanitize(country),
           sanitize(city),
-          timezone || 'UTC',
+          userTimezone,
           language || 'en',
           temperature_unit || 'C',
           user.id
@@ -231,7 +235,7 @@ api.post('/user/preferences', authMiddleware, async (c) => {
           user.id,
           sanitize(country),
           sanitize(city),
-          timezone || 'UTC',
+          userTimezone,
           language || 'en',
           temperature_unit || 'C'
         ).run()

@@ -9,6 +9,7 @@ import dashboardRoutes from './routes/dashboard'
 import apiRoutes from './routes/api'
 import adminRoutes from './routes/admin'
 import adminApiRoutes from './routes/admin-api'
+import webhookRoutes from './routes/webhook'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -24,6 +25,7 @@ app.route('/dashboard', dashboardRoutes)
 app.route('/api', apiRoutes)
 app.route('/api/admin', adminApiRoutes)
 app.route('/admin', adminRoutes)
+app.route('/webhook', webhookRoutes)
 
 // Landing page
 app.get('/', (c) => {
