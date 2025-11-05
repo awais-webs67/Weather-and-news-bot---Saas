@@ -228,6 +228,26 @@ adminApi.post('/test/weather', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Setup bot commands
+adminApi.post('/setup-bot-commands', adminAuthMiddleware, async (c) => {
+  try {
+    const settings = await c.env.DB.prepare(
+      "SELECT setting_value FROM api_settings WHERE setting_key = 'telegram_bot_token'"
+    ).first()
+    
+    if (!settings || !settings.setting_value) {
+      return c.json({ success: false, error: 'Bot token not configured' }, 400)
+    }
+    
+    const bot = new TelegramBot(settings.setting_value as string)
+    const result = await bot.setCommands()
+    
+    return c.json(result)
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // Get API logs
 adminApi.get('/logs', adminAuthMiddleware, async (c) => {
   try {

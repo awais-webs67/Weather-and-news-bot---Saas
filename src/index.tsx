@@ -266,4 +266,13 @@ app.get('/', (c) => {
   `)
 })
 
-export default app
+// Export scheduled handler for Cloudflare Cron Triggers
+export default {
+  fetch: app.fetch,
+  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+    // This runs every minute to check for scheduled messages
+    const { MessageScheduler } = await import('./lib/scheduler')
+    const scheduler = new MessageScheduler(env.DB)
+    await scheduler.sendScheduledMessages()
+  }
+}

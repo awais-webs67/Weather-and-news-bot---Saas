@@ -12,5 +12,8 @@
       "database_name": "webapp-production",
       "database_id": "local-db-for-development"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["* * * * *"]
+  }
 }

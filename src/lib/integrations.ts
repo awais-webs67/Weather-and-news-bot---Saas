@@ -89,6 +89,40 @@ export class TelegramBot {
       }
     }
   }
+
+  async setCommands(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const commands = [
+        { command: 'start', description: '🚀 Start the bot and get welcome message' },
+        { command: 'weather', description: '🌤️ Get current weather update' },
+        { command: 'news', description: '📰 Get latest news summary' },
+        { command: 'settings', description: '⚙️ View your settings' },
+        { command: 'help', description: '❓ Get help and usage guide' }
+      ]
+      
+      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/setMyCommands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commands })
+      })
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        return { success: true }
+      } else {
+        return {
+          success: false,
+          error: data.description || 'Failed to set commands'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
 }
 
 // Weather API Integration (OpenWeatherMap)
