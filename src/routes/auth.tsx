@@ -12,15 +12,16 @@ auth.get('/login', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login - WeatherNews Alert</title>
+        <title>Login - AlertFlow</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
         <link href="/static/styles.css" rel="stylesheet">
     </head>
-    <body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
         <!-- Back to Home Button -->
-        <div class="absolute top-4 left-4">
-            <a href="/" class="flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold">
+        <div class="absolute top-6 left-6 z-10">
+            <a href="/" class="flex items-center space-x-2 text-gray-700 hover:text-teal-600 font-semibold transition">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to Home</span>
             </a>
@@ -28,18 +29,21 @@ auth.get('/login', (c) => {
 
         <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-md w-full">
-                <div class="glass-card">
+                <div class="bg-white rounded-2xl shadow-2xl p-8">
                     <div class="text-center mb-8">
-                        <div class="flex justify-center mb-4">
-                            <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-4 rounded-2xl">
-                                <i class="fas fa-cloud-sun text-5xl text-white"></i>
+                        <div class="flex justify-center mb-6">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-gradient-to-br from-teal-400 to-blue-500 rounded-2xl blur opacity-60"></div>
+                                <div class="relative bg-gradient-to-br from-teal-500 to-blue-600 p-4 rounded-2xl">
+                                    <i class="fas fa-bolt text-5xl text-white"></i>
+                                </div>
                             </div>
                         </div>
-                        <h2 class="text-3xl font-bold gradient-text">
+                        <h2 class="text-3xl font-black text-gray-900 mb-2">
                             Welcome Back
                         </h2>
-                        <p class="mt-2 text-gray-600">
-                            Sign in to continue to your dashboard
+                        <p class="text-gray-600">
+                            Sign in to continue to AlertFlow
                         </p>
                     </div>
 
@@ -53,7 +57,7 @@ auth.get('/login', (c) => {
 
                         <div>
                             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-envelope text-purple-600 mr-1"></i> Email Address
+                                <i class="fas fa-envelope text-teal-600 mr-1"></i> Email Address
                             </label>
                             <input id="email" name="email" type="email" required 
                                 class="input-field" 
@@ -62,7 +66,7 @@ auth.get('/login', (c) => {
 
                         <div>
                             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-lock text-purple-600 mr-1"></i> Password
+                                <i class="fas fa-lock text-teal-600 mr-1"></i> Password
                             </label>
                             <input id="password" name="password" type="password" required 
                                 class="input-field" 
@@ -70,7 +74,7 @@ auth.get('/login', (c) => {
                         </div>
 
                         <div>
-                            <button type="submit" id="submitBtn" class="btn-primary w-full">
+                            <button type="submit" id="submitBtn" class="btn-primary w-full text-lg py-4">
                                 <i class="fas fa-sign-in-alt mr-2"></i> Sign In
                             </button>
                         </div>
@@ -78,7 +82,7 @@ auth.get('/login', (c) => {
                         <div class="text-center">
                             <p class="text-sm text-gray-600">
                                 Don't have an account?
-                                <a href="/auth/signup" class="font-semibold text-purple-600 hover:text-purple-800">
+                                <a href="/auth/signup" class="font-semibold text-teal-600 hover:text-teal-700 transition">
                                     Start Free Trial <i class="fas fa-arrow-right ml-1"></i>
                                 </a>
                             </p>
@@ -132,15 +136,16 @@ auth.get('/signup', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Sign Up - WeatherNews Alert</title>
+        <title>Sign Up - AlertFlow</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
         <link href="/static/styles.css" rel="stylesheet">
     </head>
-    <body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
         <!-- Back to Home Button -->
-        <div class="absolute top-4 left-4">
-            <a href="/" class="flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold">
+        <div class="absolute top-6 left-6 z-10">
+            <a href="/" class="flex items-center space-x-2 text-gray-700 hover:text-teal-600 font-semibold transition">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to Home</span>
             </a>
@@ -148,17 +153,20 @@ auth.get('/signup', (c) => {
 
         <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-md w-full">
-                <div class="glass-card">
+                <div class="bg-white rounded-2xl shadow-2xl p-8">
                     <div class="text-center mb-8">
-                        <div class="flex justify-center mb-4">
-                            <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-4 rounded-2xl">
-                                <i class="fas fa-cloud-sun text-5xl text-white"></i>
+                        <div class="flex justify-center mb-6">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-gradient-to-br from-teal-400 to-blue-500 rounded-2xl blur opacity-60"></div>
+                                <div class="relative bg-gradient-to-br from-teal-500 to-blue-600 p-4 rounded-2xl">
+                                    <i class="fas fa-bolt text-5xl text-white"></i>
+                                </div>
                             </div>
                         </div>
-                        <h2 class="text-3xl font-bold gradient-text">
+                        <h2 class="text-3xl font-black text-gray-900 mb-2">
                             Start Your Free Trial
                         </h2>
-                        <p class="mt-2 text-gray-600">
+                        <p class="text-gray-600 mb-4">
                             Get 3 days free access to all features
                         </p>
                         <div class="flex justify-center space-x-4 mt-4 text-sm text-gray-600">
@@ -177,7 +185,7 @@ auth.get('/signup', (c) => {
 
                         <div>
                             <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-user text-purple-600 mr-1"></i> Full Name
+                                <i class="fas fa-user text-teal-600 mr-1"></i> Full Name
                             </label>
                             <input id="name" name="name" type="text" required 
                                 class="input-field" 
@@ -186,7 +194,7 @@ auth.get('/signup', (c) => {
                         
                         <div>
                             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-envelope text-purple-600 mr-1"></i> Email Address
+                                <i class="fas fa-envelope text-teal-600 mr-1"></i> Email Address
                             </label>
                             <input id="email" name="email" type="email" required 
                                 class="input-field" 
@@ -195,7 +203,7 @@ auth.get('/signup', (c) => {
                         
                         <div>
                             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-lock text-purple-600 mr-1"></i> Password
+                                <i class="fas fa-lock text-teal-600 mr-1"></i> Password
                             </label>
                             <input id="password" name="password" type="password" required 
                                 class="input-field" 
@@ -204,7 +212,7 @@ auth.get('/signup', (c) => {
                         </div>
 
                         <div>
-                            <button type="submit" id="submitBtn" class="btn-primary w-full">
+                            <button type="submit" id="submitBtn" class="btn-primary w-full text-lg py-4">
                                 <i class="fas fa-rocket mr-2"></i> Start Free Trial
                             </button>
                         </div>
@@ -212,7 +220,7 @@ auth.get('/signup', (c) => {
                         <div class="text-center">
                             <p class="text-sm text-gray-600">
                                 Already have an account?
-                                <a href="/auth/login" class="font-semibold text-purple-600 hover:text-purple-800">
+                                <a href="/auth/login" class="font-semibold text-teal-600 hover:text-teal-700 transition">
                                     Sign In <i class="fas fa-arrow-right ml-1"></i>
                                 </a>
                             </p>

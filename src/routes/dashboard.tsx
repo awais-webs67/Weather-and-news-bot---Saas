@@ -25,21 +25,25 @@ dashboard.get('/', async (c) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - WeatherNews Alert</title>
+    <title>Dashboard - AlertFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link href="/static/styles.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-indigo-100">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white shadow-lg border-b-2 border-teal-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-2 rounded-lg">
-                        <i class="fas fa-cloud-sun text-2xl text-white"></i>
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-gradient-to-br from-teal-400 to-blue-500 rounded-xl blur opacity-60"></div>
+                        <div class="relative bg-gradient-to-br from-teal-500 to-blue-600 p-2.5 rounded-xl">
+                            <i class="fas fa-bolt text-2xl text-white"></i>
+                        </div>
                     </div>
-                    <span class="text-xl font-bold gradient-text hidden sm:inline">WeatherNews Alert</span>
+                    <span class="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent hidden sm:inline">AlertFlow</span>
                 </div>
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-4">
@@ -47,6 +51,64 @@ dashboard.get('/', async (c) => {
                     <a href="/" class="nav-link text-gray-600">
                         <i class="fas fa-home"></i> <span class="hidden lg:inline">Home</span>
                     </a>
+                    <!-- Subscription Dropdown -->
+                    <div class="relative subscription-dropdown">
+                        <button onclick="toggleSubscriptionMenu()" class="nav-link text-purple-600 hover:bg-purple-50 flex items-center">
+                            <i class="fas fa-crown mr-1"></i>
+                            <span class="hidden lg:inline" id="headerPlan">Free Trial</span>
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div id="subscriptionMenu" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border-2 border-purple-200 z-50">
+                            <div class="p-4 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-t-xl">
+                                <h3 class="font-bold text-lg mb-1">Your Subscription</h3>
+                                <p class="text-sm opacity-90">Manage your plan and billing</p>
+                            </div>
+                            <div class="p-4">
+                                <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-4 rounded-lg mb-4">
+                                    <p class="text-teal-100 text-xs mb-1">Current Plan</p>
+                                    <p class="text-2xl font-bold" id="dropdownPlan">Free Trial</p>
+                                    <p class="text-sm text-teal-100 mt-2">Expires: <span id="dropdownExpiry">-</span></p>
+                                    <p class="text-xs text-teal-100 mt-1">Status: <span id="dropdownStatus">Active</span></p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-xs font-semibold text-gray-600 mb-2">Activate License Key</label>
+                                    <div class="flex space-x-2">
+                                        <input type="text" id="headerLicenseInput" placeholder="XXXX-XXXX-XXXX-XXXX" 
+                                            class="input-field text-sm flex-1" maxlength="19">
+                                        <button onclick="activateLicenseFromHeader()" class="btn-primary text-sm px-4">
+                                            Activate
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <div class="border rounded-lg p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="font-semibold">Monthly</span>
+                                            <span class="text-lg font-bold">$9.99<span class="text-sm text-gray-500">/mo</span></span>
+                                        </div>
+                                        <button onclick="requestPaymentFromHeader('monthly')" class="btn-primary w-full text-sm">
+                                            <i class="fab fa-whatsapp mr-1"></i> Pay via WhatsApp
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="border-2 border-teal-500 bg-teal-50 rounded-lg p-3 relative">
+                                        <div class="absolute -top-2 right-2 bg-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                                            SAVE 20%
+                                        </div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="font-semibold">Yearly</span>
+                                            <span class="text-lg font-bold">$95.99<span class="text-sm text-gray-500">/yr</span></span>
+                                        </div>
+                                        <button onclick="requestPaymentFromHeader('yearly')" class="btn-primary w-full text-sm">
+                                            <i class="fab fa-whatsapp mr-1"></i> Pay via WhatsApp
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <span class="text-sm text-gray-600" id="userEmail"></span>
                     <button onclick="logout()" class="nav-link text-red-600 hover:bg-red-50">
                         <i class="fas fa-sign-out-alt"></i> <span class="hidden lg:inline">Logout</span>
@@ -65,6 +127,10 @@ dashboard.get('/', async (c) => {
                     <a href="/" class="nav-link text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-100">
                         <i class="fas fa-home mr-2"></i> Home
                     </a>
+                    <button onclick="toggleSubscriptionMenu()" class="nav-link text-purple-600 px-3 py-2 rounded-lg hover:bg-purple-50 text-left flex items-center justify-between">
+                        <span><i class="fas fa-crown mr-2"></i> Subscription</span>
+                        <span class="text-xs" id="mobilePlanBadge">Free</span>
+                    </button>
                     <button onclick="logout()" class="nav-link text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 text-left">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </button>
@@ -89,10 +155,12 @@ dashboard.get('/', async (c) => {
             </div>
         </div>
 
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold gradient-text">Dashboard</h1>
-            <button onclick="testNotification()" class="btn-secondary">
-                <i class="fas fa-paper-plane mr-2"></i> Test Notification
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Dashboard</h1>
+            <button onclick="testNotification()" class="btn-primary w-full sm:w-auto">
+                <i class="fas fa-paper-plane mr-2"></i> 
+                <span class="hidden sm:inline">Test Notification</span>
+                <span class="sm:hidden">Test Message</span>
             </button>
         </div>
 
@@ -125,80 +193,6 @@ dashboard.get('/', async (c) => {
                         <p class="text-2xl font-bold" id="trialEnds">-</p>
                     </div>
                     <i class="fas fa-calendar text-4xl text-purple-200"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Subscription & Pricing -->
-        <div class="glass-card mb-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold flex items-center gradient-text">
-                    <i class="fas fa-crown mr-3"></i>
-                    Subscription & Billing
-                </h2>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-6">
-                <!-- Current Plan -->
-                <div class="col-span-1">
-                    <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl">
-                        <p class="text-teal-100 text-sm mb-2">Current Plan</p>
-                        <p class="text-3xl font-bold mb-4" id="currentPlan">Free Trial</p>
-                        <p class="text-sm text-teal-100">Expires: <span id="planExpiry">-</span></p>
-                    </div>
-                    
-                    <div class="mt-4" id="activationSection">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-key"></i> Have a License Key?
-                        </label>
-                        <input type="text" id="licenseKeyInput" placeholder="XXXX-XXXX-XXXX-XXXX" 
-                            class="input-field mb-3" maxlength="19">
-                        <button onclick="activateLicense()" class="btn-primary w-full">
-                            <i class="fas fa-check-circle mr-2"></i> Activate License
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Pricing Plans -->
-                <div class="col-span-2 grid md:grid-cols-2 gap-4">
-                    <!-- Monthly Plan -->
-                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-teal-500 transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold">Monthly</h3>
-                            <span class="badge badge-primary">Popular</span>
-                        </div>
-                        <p class="text-4xl font-bold mb-2">$9.99<span class="text-lg text-gray-500">/mo</span></p>
-                        <ul class="space-y-2 mb-6 text-sm">
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Unlimited weather updates</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Daily news summaries</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> 7-day forecasts</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Multi-language support</li>
-                        </ul>
-                        <button onclick="requestPayment('monthly')" class="btn-primary w-full">
-                            <i class="fab fa-whatsapp mr-2"></i> Pay via WhatsApp
-                        </button>
-                    </div>
-                    
-                    <!-- Yearly Plan -->
-                    <div class="border-2 border-teal-500 bg-teal-50 rounded-xl p-6 relative">
-                        <div class="absolute -top-3 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                            SAVE 20%
-                        </div>
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold">Yearly</h3>
-                            <span class="badge badge-success">Best Value</span>
-                        </div>
-                        <p class="text-4xl font-bold mb-2">$95.99<span class="text-lg text-gray-500">/yr</span></p>
-                        <ul class="space-y-2 mb-6 text-sm">
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> All Monthly features</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> AI-powered insights</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Priority support</li>
-                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Save $24/year</li>
-                        </ul>
-                        <button onclick="requestPayment('yearly')" class="btn-primary w-full">
-                            <i class="fab fa-whatsapp mr-2"></i> Pay via WhatsApp
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -412,6 +406,21 @@ dashboard.get('/', async (c) => {
             menu.classList.toggle('hidden');
         }
 
+        // Toggle subscription dropdown
+        function toggleSubscriptionMenu() {
+            const menu = document.getElementById('subscriptionMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.subscription-dropdown');
+            const menu = document.getElementById('subscriptionMenu');
+            if (dropdown && menu && !dropdown.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
         // Update clocks
         function updateClocks() {
             const now = new Date();
@@ -475,12 +484,19 @@ dashboard.get('/', async (c) => {
             document.getElementById('subscriptionPlan').textContent = user.subscription_plan.toUpperCase();
             document.getElementById('subscriptionStatus').textContent = user.subscription_status.toUpperCase();
             
+            // Update header dropdown
+            document.getElementById('headerPlan').textContent = user.subscription_plan.toUpperCase();
+            document.getElementById('mobilePlanBadge').textContent = user.subscription_plan === 'free' ? 'Free' : user.subscription_plan === 'monthly' ? 'Monthly' : 'Yearly';
+            document.getElementById('dropdownPlan').textContent = user.subscription_plan.toUpperCase();
+            document.getElementById('dropdownStatus').textContent = user.subscription_status.toUpperCase();
+            
             if (user.trial_ends_at) {
                 const trialDate = new Date(user.trial_ends_at);
                 const now = new Date();
                 const daysLeft = Math.ceil((trialDate - now) / (1000 * 60 * 60 * 24));
                 
                 document.getElementById('trialEnds').textContent = trialDate.toLocaleDateString();
+                document.getElementById('dropdownExpiry').textContent = trialDate.toLocaleDateString();
                 
                 if (daysLeft > 0 && daysLeft <= 3) {
                     document.getElementById('trialBanner').classList.remove('hidden');
@@ -685,8 +701,8 @@ dashboard.get('/', async (c) => {
             }
         }
 
-        async function activateLicense() {
-            const licenseKey = document.getElementById('licenseKeyInput').value.trim().toUpperCase();
+        async function activateLicenseFromHeader() {
+            const licenseKey = document.getElementById('headerLicenseInput').value.trim().toUpperCase();
             
             if (!licenseKey) {
                 showToast('Please enter a license key', 'warning');
@@ -697,7 +713,8 @@ dashboard.get('/', async (c) => {
                 const response = await axios.post('/api/user/activate-license', { licenseKey });
                 if (response.data.success) {
                     showToast('License activated successfully! 🎉', 'success');
-                    document.getElementById('licenseKeyInput').value = '';
+                    document.getElementById('headerLicenseInput').value = '';
+                    document.getElementById('subscriptionMenu').classList.add('hidden');
                     await loadProfile();
                 } else {
                     showToast(response.data.error || 'Failed to activate', 'error');
@@ -707,11 +724,12 @@ dashboard.get('/', async (c) => {
             }
         }
 
-        async function requestPayment(planType) {
+        async function requestPaymentFromHeader(planType) {
             try {
                 const response = await axios.post('/api/user/request-payment', { planType });
                 if (response.data.success) {
                     showToast(\`Opening WhatsApp for \${response.data.plan}...\`, 'info');
+                    document.getElementById('subscriptionMenu').classList.add('hidden');
                     setTimeout(() => {
                         window.open(response.data.whatsappLink, '_blank');
                     }, 1000);

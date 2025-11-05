@@ -228,6 +228,114 @@ adminApi.post('/test/weather', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Test News API
+adminApi.post('/test/news', adminAuthMiddleware, async (c) => {
+  try {
+    const { apiKey } = await c.req.json()
+    
+    if (!apiKey) {
+      return c.json({ error: 'API key is required' }, 400)
+    }
+    
+    const { NewsAPI } = await import('../lib/integrations')
+    const newsApi = new NewsAPI(apiKey)
+    const result = await newsApi.getTopHeadlines('us')
+    
+    // Log the test
+    const logger = new APILogger(c.env.DB)
+    await logger.log(
+      'news',
+      'test_connection',
+      result.success || false,
+      result.articles ? JSON.stringify({ count: result.articles.length }) : undefined,
+      result.error
+    )
+    
+    if (result.success && result.articles) {
+      return c.json({
+        success: true,
+        data: {
+          count: result.articles.length,
+          headlines: result.articles.slice(0, 3).map((a: any) => a.title)
+        }
+      })
+    } else {
+      return c.json({
+        success: false,
+        error: result.error || 'Failed to fetch news'
+      }, 400)
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Test Gemini AI
+adminApi.post('/test/gemini', adminAuthMiddleware, async (c) => {
+  try {
+    const { apiKey } = await c.req.json()
+    
+    if (!apiKey) {
+      return c.json({ error: 'API key is required' }, 400)
+    }
+    
+    // Test Gemini API with a simple prompt
+    const testPrompt = 'Say hello in one sentence.'
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: testPrompt }] }]
+        })
+      }
+    )
+    
+    const data = await response.json()
+    
+    // Log the test
+    const logger = new APILogger(c.env.DB)
+    
+    if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const aiResponse = data.candidates[0].content.parts[0].text
+      
+      await logger.log(
+        'gemini',
+        'test_connection',
+        true,
+        JSON.stringify({ model: 'gemini-1.5-flash' }),
+        undefined
+      )
+      
+      return c.json({
+        success: true,
+        data: {
+          model: 'gemini-1.5-flash',
+          response: aiResponse
+        }
+      })
+    } else {
+      const errorMsg = data.error?.message || 'Failed to generate content'
+      
+      await logger.log(
+        'gemini',
+        'test_connection',
+        false,
+        undefined,
+        errorMsg
+      )
+      
+      return c.json({
+        success: false,
+        error: errorMsg
+      }, 400)
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // Setup bot commands
 adminApi.post('/setup-bot-commands', adminAuthMiddleware, async (c) => {
   try {

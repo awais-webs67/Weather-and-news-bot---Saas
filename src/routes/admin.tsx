@@ -58,21 +58,28 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - WeatherNews Alert</title>
+    <title>Admin Dashboard - AlertFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Navigation -->
     <nav class="bg-white shadow-lg border-b-4 border-red-600">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-br from-red-600 to-orange-600 p-2 rounded-lg">
-                        <i class="fas fa-user-shield text-2xl text-white"></i>
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl blur opacity-60"></div>
+                        <div class="relative bg-gradient-to-br from-red-600 to-orange-600 p-2.5 rounded-xl">
+                            <i class="fas fa-user-shield text-2xl text-white"></i>
+                        </div>
                     </div>
-                    <span class="text-xl font-bold text-gray-800">Admin Dashboard</span>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">AlertFlow</span>
+                        <span class="text-xs text-gray-500 font-semibold">Admin Panel</span>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <a href="/" class="nav-link text-gray-600">
@@ -222,7 +229,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         News API
                     </h2>
                     <span id="newsStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
-                        Not Configured
+                        Not Tested
                     </span>
                 </div>
                 
@@ -236,9 +243,16 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         <p class="text-xs text-gray-500 mt-1">Get FREE key: <a href="https://newsapi.org/register" target="_blank" class="text-red-600 hover:underline font-semibold">newsapi.org/register</a></p>
                     </div>
 
-                    <button onclick="saveNewsKey()" class="btn-primary w-full">
-                        <i class="fas fa-save mr-2"></i> Save News API Key
-                    </button>
+                    <div class="flex space-x-3">
+                        <button onclick="testNews()" class="btn-primary flex-1">
+                            <i class="fas fa-vial mr-2"></i> Test Connection
+                        </button>
+                        <button onclick="saveNewsKey()" class="btn-secondary">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+
+                    <div id="newsResult" class="hidden p-4 rounded-lg"></div>
                 </div>
             </div>
 
@@ -250,7 +264,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         Gemini AI
                     </h2>
                     <span id="geminiStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
-                        Not Configured
+                        Not Tested
                     </span>
                 </div>
                 
@@ -264,9 +278,16 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         <p class="text-xs text-gray-500 mt-1">For AI-powered weather insights & summaries</p>
                     </div>
 
-                    <button onclick="saveGeminiKey()" class="btn-primary w-full">
-                        <i class="fas fa-save mr-2"></i> Save Gemini Key
-                    </button>
+                    <div class="flex space-x-3">
+                        <button onclick="testGemini()" class="btn-primary flex-1">
+                            <i class="fas fa-vial mr-2"></i> Test Connection
+                        </button>
+                        <button onclick="saveGeminiKey()" class="btn-secondary">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+
+                    <div id="geminiResult" class="hidden p-4 rounded-lg"></div>
                 </div>
             </div>
         </div>
@@ -310,24 +331,59 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
         </div>
 
-        <!-- WhatsApp Toggle -->
+        <!-- Channel Management -->
         <div class="glass-card mb-8">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <i class="fab fa-whatsapp text-5xl text-green-600"></i>
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800">WhatsApp Integration</h3>
-                        <p class="text-sm text-gray-600">Enable WhatsApp Cloud API for message delivery</p>
+            <h2 class="text-2xl font-bold mb-6 flex items-center text-gray-900">
+                <i class="fas fa-satellite-dish text-3xl mr-3 text-blue-600"></i>
+                Messaging Channels
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Enable or disable messaging platforms for alert delivery</p>
+            
+            <!-- Telegram Toggle -->
+            <div class="border-2 border-blue-200 rounded-xl p-6 mb-4 bg-blue-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <i class="fab fa-telegram text-5xl text-blue-500"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Telegram Bot</h3>
+                            <p class="text-sm text-gray-600">Primary messaging platform for AlertFlow</p>
+                            <span id="telegramChannelStatus" class="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                ✓ Active & Configured
+                            </span>
+                        </div>
                     </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="telegramToggle" class="sr-only peer" checked onchange="toggleTelegram(this.checked)">
+                        <div class="w-16 h-8 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="whatsappToggle" class="sr-only peer" disabled>
-                    <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
-                </label>
             </div>
-            <p class="text-xs text-gray-500 mt-4">
-                <i class="fas fa-info-circle"></i> Configure WhatsApp credentials in settings before enabling
-            </p>
+            
+            <!-- WhatsApp Toggle -->
+            <div class="border-2 border-green-200 rounded-xl p-6 bg-green-50 opacity-60">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <i class="fab fa-whatsapp text-5xl text-green-600"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">WhatsApp Cloud API</h3>
+                            <p class="text-sm text-gray-600">Coming soon - Enterprise messaging integration</p>
+                            <span class="inline-block mt-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
+                                🔒 Disabled (In Development)
+                            </span>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-not-allowed">
+                        <input type="checkbox" id="whatsappToggle" class="sr-only peer" disabled>
+                        <div class="w-16 h-8 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                    </label>
+                </div>
+                <div class="mt-4 p-3 bg-white rounded-lg border border-green-200">
+                    <p class="text-xs text-gray-700">
+                        <i class="fas fa-info-circle text-blue-500"></i> 
+                        <strong>WhatsApp Integration:</strong> Requires WhatsApp Business API credentials. This feature will be enabled in a future update with proper API configuration.
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- User Management -->
@@ -717,6 +773,155 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             } catch (error) {
                 showToast('Failed to save Gemini key', 'error');
             }
+        }
+
+        async function toggleTelegram(isEnabled) {
+            try {
+                await axios.post('/api/admin/settings', {
+                    settings: { telegram_enabled: isEnabled ? '1' : '0' }
+                });
+                
+                const statusEl = document.getElementById('telegramChannelStatus');
+                if (isEnabled) {
+                    statusEl.textContent = '✓ Active & Configured';
+                    statusEl.className = 'inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';
+                    showToast('Telegram channel enabled successfully!', 'success');
+                } else {
+                    statusEl.textContent = '⚠ Disabled';
+                    statusEl.className = 'inline-block mt-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold';
+                    showToast('Telegram channel disabled. Users will not receive alerts.', 'warning');
+                }
+            } catch (error) {
+                showToast('Failed to update Telegram channel status', 'error');
+                // Revert toggle
+                document.getElementById('telegramToggle').checked = !isEnabled;
+            }
+        }
+
+        async function testNews() {
+            const apiKey = document.getElementById('news_api_key').value;
+            const resultDiv = document.getElementById('newsResult');
+            const statusBadge = document.getElementById('newsStatus');
+            
+            if (!apiKey) {
+                showToast('Please enter News API key', 'warning');
+                return;
+            }
+            
+            resultDiv.classList.add('hidden');
+            statusBadge.textContent = 'Testing...';
+            statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-yellow-200 text-yellow-800';
+            
+            try {
+                const response = await axios.post('/api/admin/test/news', { apiKey });
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                    resultDiv.innerHTML = \`
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+                            <div class="flex-1">
+                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
+                                <p class="text-sm text-green-700 mt-1">Headlines Fetched: <strong>\${data.count}</strong></p>
+                                <div class="mt-2 text-xs text-green-700">
+                                    <p class="font-semibold">Sample Headlines:</p>
+                                    <ul class="list-disc list-inside mt-1">
+                                        \${data.headlines.map(h => \`<li class="truncate">\${h}</li>\`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                    statusBadge.textContent = '✅ Working';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
+                    showToast('News API connected successfully!', 'success');
+                } else {
+                    throw new Error(response.data.error || 'Test failed');
+                }
+                
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                resultDiv.innerHTML = \`
+                    <div class="flex items-start">
+                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
+                        <div>
+                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
+                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
+                            <p class="text-xs text-red-600 mt-2">Get a FREE key from: <a href="https://newsapi.org/register" target="_blank" class="underline">NewsAPI.org</a></p>
+                        </div>
+                    </div>
+                \`;
+                statusBadge.textContent = '❌ Failed';
+                statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
+                resultDiv.classList.remove('hidden');
+                showToast('News API test failed', 'error');
+            }
+            
+            await loadLogs();
+        }
+
+        async function testGemini() {
+            const apiKey = document.getElementById('gemini_api_key').value;
+            const resultDiv = document.getElementById('geminiResult');
+            const statusBadge = document.getElementById('geminiStatus');
+            
+            if (!apiKey) {
+                showToast('Please enter Gemini API key', 'warning');
+                return;
+            }
+            
+            resultDiv.classList.add('hidden');
+            statusBadge.textContent = 'Testing...';
+            statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-yellow-200 text-yellow-800';
+            
+            try {
+                const response = await axios.post('/api/admin/test/gemini', { apiKey });
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                    resultDiv.innerHTML = \`
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+                            <div class="flex-1">
+                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
+                                <p class="text-sm text-green-700 mt-1">Model: <strong>\${data.model}</strong></p>
+                                <div class="mt-2 p-2 bg-white rounded border border-green-300">
+                                    <p class="text-xs text-gray-700 font-semibold">AI Response:</p>
+                                    <p class="text-sm text-gray-800 mt-1">\${data.response}</p>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                    statusBadge.textContent = '✅ Working';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
+                    showToast('Gemini AI connected successfully!', 'success');
+                } else {
+                    throw new Error(response.data.error || 'Test failed');
+                }
+                
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                resultDiv.innerHTML = \`
+                    <div class="flex items-start">
+                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
+                        <div>
+                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
+                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
+                            <p class="text-xs text-red-600 mt-2">Check your Gemini API key at: <a href="https://makersuite.google.com/app/apikey" target="_blank" class="underline">Google AI Studio</a></p>
+                        </div>
+                    </div>
+                \`;
+                statusBadge.textContent = '❌ Failed';
+                statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
+                resultDiv.classList.remove('hidden');
+                showToast('Gemini AI test failed', 'error');
+            }
+            
+            await loadLogs();
         }
 
         async function generateLicenseKey() {

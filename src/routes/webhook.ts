@@ -51,26 +51,109 @@ webhook.post('/telegram', async (c) => {
     // Handle commands
     if (text.startsWith('/start')) {
       const welcomeMsg = `
-🎉 <b>Welcome to WeatherNews Alert!</b>
+╔══════════════════════════╗
+⚡ <b>Welcome to AlertFlow!</b>
+╚══════════════════════════╝
 
-I can send you daily weather forecasts and news updates!
+Smart weather & news automation delivered right here! 🌟
 
-<b>Available Commands:</b>
-/weather - Get current weather
-/news - Get latest news
-/settings - View your settings
-/help - Get help
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>Getting Started:</b>
-1. Sign up at our website
-2. Connect your Telegram account
-3. Set your location and schedule
-4. Receive automated updates!
+<b>📋 Available Commands:</b>
 
-Visit: ${c.req.header('origin') || 'https://webapp.pages.dev'}
+🌤️ /weather - Get your local weather
+🌍 /checkweather - Check any city worldwide
+📰 /news - Get latest news headlines
+⚙️ /settings - View your settings
+❓ /help - Get help & usage guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>🚀 Getting Started:</b>
+
+1️⃣ Sign up at our website
+2️⃣ Connect your Telegram account
+3️⃣ Set your location and schedule
+4️⃣ Receive automated updates!
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>🌐 Visit:</b> ${c.req.header('origin') || 'https://webapp.pages.dev'}
+
+✨ <i>Powered by AlertFlow</i>
       `.trim()
       
       await bot.sendMessage(chatId, welcomeMsg)
+    }
+    else if (text.startsWith('/checkweather')) {
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      // Extract city name from command
+      const cityQuery = text.replace('/checkweather', '').trim()
+      
+      if (!cityQuery) {
+        const helpMsg = `
+╔══════════════════════════╗
+🌍 <b>Check Weather Anywhere</b>
+╚══════════════════════════╝
+
+<b>Usage:</b>
+/checkweather City Name
+/checkweather City, Country
+
+<b>Examples:</b>
+• /checkweather London
+• /checkweather Paris, France
+• /checkweather New York
+• /checkweather Tokyo, Japan
+• /checkweather Karachi, Pakistan
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<i>Get weather for any city worldwide! 🌏</i>
+        `.trim()
+        await bot.sendMessage(chatId, helpMsg)
+        return c.json({ ok: true })
+      }
+      
+      // Get weather for requested city
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      
+      // Parse city and country if provided
+      let city = cityQuery
+      let country = undefined
+      if (cityQuery.includes(',')) {
+        const parts = cityQuery.split(',')
+        city = parts[0].trim()
+        country = parts[1].trim()
+      }
+      
+      const weather = await weatherAPI.getCurrentWeather(city, country)
+      
+      if (weather.success && weather.data) {
+        // Get user's temperature preference or default to Celsius
+        let tempUnit = 'C'
+        if (user) {
+          const location = await c.env.DB.prepare(
+            'SELECT temperature_unit, language FROM locations WHERE user_id = ?'
+          ).bind(user.id).first()
+          if (location) {
+            tempUnit = location.temperature_unit as string || 'C'
+          }
+        }
+        
+        const msg = formatWeatherMessage(weather.data, tempUnit, user ? 'en' : 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ <b>City Not Found</b>\n\nCouldn't find weather for "${cityQuery}".\n\nPlease check:\n• City name spelling\n• Try adding country name\n• Use English city names`)
+      }
     }
     else if (text.startsWith('/weather')) {
       if (!user) {
@@ -102,7 +185,7 @@ Visit: ${c.req.header('origin') || 'https://webapp.pages.dev'}
       const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
       
       if (weather.success && weather.data) {
-        const msg = formatWeatherMessage(weather.data, location.temperature_unit as string || 'C')
+        const msg = formatWeatherMessage(weather.data, location.temperature_unit as string || 'C', location.language as string || 'en')
         await bot.sendMessage(chatId, msg)
       } else {
         await bot.sendMessage(chatId, `⚠️ Failed to get weather: ${weather.error}`)

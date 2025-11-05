@@ -94,7 +94,8 @@ export class TelegramBot {
     try {
       const commands = [
         { command: 'start', description: '🚀 Start the bot and get welcome message' },
-        { command: 'weather', description: '🌤️ Get current weather update' },
+        { command: 'weather', description: '🌤️ Get your local weather update' },
+        { command: 'checkweather', description: '🌍 Check weather for any city worldwide' },
         { command: 'news', description: '📰 Get latest news summary' },
         { command: 'settings', description: '⚙️ View your settings' },
         { command: 'help', description: '❓ Get help and usage guide' }
@@ -322,7 +323,12 @@ export class NewsAPI {
         url += `&category=${category}`
       }
       
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'WeatherAlert/1.0',
+          'Accept': 'application/json'
+        }
+      })
       const data = await response.json()
       
       if (response.ok && data.status === 'ok') {
@@ -347,7 +353,13 @@ export class NewsAPI {
   async searchNews(query: string): Promise<{ success: boolean; articles?: any[]; error?: string }> {
     try {
       const response = await fetch(
-        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&apiKey=${this.apiKey}`
+        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&apiKey=${this.apiKey}`,
+        {
+          headers: {
+            'User-Agent': 'WeatherAlert/1.0',
+            'Accept': 'application/json'
+          }
+        }
       )
       const data = await response.json()
       
@@ -374,38 +386,75 @@ export class NewsAPI {
 // Helper function to format weather message
 export function formatWeatherMessage(data: any, temperatureUnit: string = 'C', language: string = 'en'): string {
   const temp = temperatureUnit === 'F' ? (data.temperature * 9/5 + 32).toFixed(1) : data.temperature.toFixed(1)
+  const feelsLike = temperatureUnit === 'F' ? (data.feels_like * 9/5 + 32).toFixed(1) : data.feels_like.toFixed(1)
+  const tempMax = temperatureUnit === 'F' ? (data.temp_max * 9/5 + 32).toFixed(1) : data.temp_max.toFixed(1)
+  const tempMin = temperatureUnit === 'F' ? (data.temp_min * 9/5 + 32).toFixed(1) : data.temp_min.toFixed(1)
   const unit = temperatureUnit === 'F' ? '°F' : '°C'
+  
+  // Get weather emoji based on condition
+  const getWeatherEmoji = (desc: string) => {
+    const d = desc.toLowerCase()
+    if (d.includes('clear')) return '☀️'
+    if (d.includes('cloud')) return '☁️'
+    if (d.includes('rain')) return '🌧️'
+    if (d.includes('thunder')) return '⛈️'
+    if (d.includes('snow')) return '❄️'
+    if (d.includes('mist') || d.includes('fog')) return '🌫️'
+    return '🌤️'
+  }
+  
+  const weatherEmoji = getWeatherEmoji(data.description)
   
   if (language === 'ur') {
     return `
-🌤️ <b>${data.city}, ${data.country} کے لیے موسم کی اپ ڈیٹ</b>
+╔══════════════════════════╗
+${weatherEmoji} <b>موسم کی اپ ڈیٹ</b>
+╚══════════════════════════╝
 
-🌡️ درجہ حرارت: ${temp}${unit}
-🤔 محسوس ہوتا ہے: ${temperatureUnit === 'F' ? (data.feels_like * 9/5 + 32).toFixed(1) : data.feels_like.toFixed(1)}${unit}
-📊 زیادہ سے زیادہ/کم از کم: ${temperatureUnit === 'F' ? (data.temp_max * 9/5 + 32).toFixed(1) : data.temp_max.toFixed(1)}${unit} / ${temperatureUnit === 'F' ? (data.temp_min * 9/5 + 32).toFixed(1) : data.temp_min.toFixed(1)}${unit}
+📍 <b>${data.city}, ${data.country}</b>
 
-☁️ حالت: ${data.description}
-💧 نمی: ${data.humidity}%
-💨 ہوا: ${data.wind_speed} میٹر/سیکنڈ
-☁️ بادل: ${data.clouds}%
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-آپ کا دن اچھا گزرے! ☀️
+🌡️ <b>درجہ حرارت:</b> ${temp}${unit}
+🤔 <b>محسوس ہوتا ہے:</b> ${feelsLike}${unit}
+📊 <b>زیادہ سے زیادہ/کم:</b> ${tempMax}${unit} / ${tempMin}${unit}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+${weatherEmoji} <b>حالت:</b> ${data.description}
+💧 <b>نمی:</b> ${data.humidity}%
+💨 <b>ہوا:</b> ${data.wind_speed} m/s
+☁️ <b>بادل:</b> ${data.clouds}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ <i>آپ کا دن خوشگوار گزرے!</i>
     `.trim()
   }
   
   return `
-🌤️ <b>Weather Update for ${data.city}, ${data.country}</b>
+╔══════════════════════════╗
+${weatherEmoji} <b>Weather Update</b>
+╚══════════════════════════╝
 
-🌡️ Temperature: ${temp}${unit}
-🤔 Feels like: ${temperatureUnit === 'F' ? (data.feels_like * 9/5 + 32).toFixed(1) : data.feels_like.toFixed(1)}${unit}
-📊 High/Low: ${temperatureUnit === 'F' ? (data.temp_max * 9/5 + 32).toFixed(1) : data.temp_max.toFixed(1)}${unit} / ${temperatureUnit === 'F' ? (data.temp_min * 9/5 + 32).toFixed(1) : data.temp_min.toFixed(1)}${unit}
+📍 <b>${data.city}, ${data.country}</b>
 
-☁️ Condition: ${data.description}
-💧 Humidity: ${data.humidity}%
-💨 Wind: ${data.wind_speed} m/s
-☁️ Clouds: ${data.clouds}%
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-Have a great day! ☀️
+🌡️ <b>Temperature:</b> ${temp}${unit}
+🤔 <b>Feels like:</b> ${feelsLike}${unit}
+📊 <b>High/Low:</b> ${tempMax}${unit} / ${tempMin}${unit}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+${weatherEmoji} <b>Condition:</b> ${data.description}
+💧 <b>Humidity:</b> ${data.humidity}%
+💨 <b>Wind:</b> ${data.wind_speed} m/s
+☁️ <b>Clouds:</b> ${data.clouds}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ <i>Have an amazing day!</i>
   `.trim()
 }
 
@@ -417,18 +466,40 @@ export function formatNewsMessage(articles: any[], language: string = 'en'): str
       : '📰 No news available.'
   }
 
-  const header = language === 'ur' 
-    ? '📰 <b>آج کی اہم خبریں</b>\n\n'
-    : '📰 <b>Today\'s Top Headlines</b>\n\n'
+  const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
   
-  let message = header
+  if (language === 'ur') {
+    let message = `
+╔══════════════════════════╗
+📰 <b>آج کی اہم خبریں</b>
+╚══════════════════════════╝
+
+`
+    articles.forEach((article, index) => {
+      const title = article.title || 'کوئی عنوان نہیں'
+      const source = article.source?.name || 'نامعلوم'
+      message += `${numberEmojis[index]} <b>${title}</b>\n`
+      message += `   📍 <i>${source}</i>\n\n`
+    })
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n✨ <i>AlertFlow کے ذریعے فراہم کردہ</i>`
+    return message.trim()
+  }
+  
+  let message = `
+╔══════════════════════════╗
+📰 <b>Today's Top Headlines</b>
+╚══════════════════════════╝
+
+`
   
   articles.forEach((article, index) => {
     const title = article.title || 'No title'
     const source = article.source?.name || 'Unknown'
-    message += `${index + 1}. <b>${title}</b>\n`
-    message += `   📍 ${source}\n\n`
+    message += `${numberEmojis[index]} <b>${title}</b>\n`
+    message += `   📍 <i>${source}</i>\n\n`
   })
   
+  message += `━━━━━━━━━━━━━━━━━━━━━━━━\n✨ <i>Powered by AlertFlow</i>`
   return message.trim()
 }
