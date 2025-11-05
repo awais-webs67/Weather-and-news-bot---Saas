@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - WeatherNews Alert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-100 min-h-screen">
+    <!-- Back to Home Button -->
+    <div class="absolute top-4 left-4">
+        <a href="/" class="flex items-center space-x-2 text-red-600 hover:text-red-800 font-semibold">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Home</span>
+        </a>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <div class="glass-card">
+                <div class="text-center mb-8">
+                    <div class="flex justify-center mb-4">
+                        <div class="bg-gradient-to-br from-red-600 to-orange-600 p-4 rounded-2xl">
+                            <i class="fas fa-user-shield text-5xl text-white"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-3xl font-bold text-red-600">
+                        Admin Portal
+                    </h2>
+                    <p class="mt-2 text-gray-600">
+                        Secure access for administrators only
+                    </p>
+                </div>
+
+                <form id="adminLoginForm" class="space-y-6">
+                    <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span id="errorText"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-user text-red-600 mr-1"></i> Username
+                        </label>
+                        <input id="username" name="username" type="text" required 
+                            class="input-field" 
+                            placeholder="Enter admin username">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-lock text-red-600 mr-1"></i> Password
+                        </label>
+                        <input id="password" name="password" type="password" required 
+                            class="input-field" 
+                            placeholder="Enter admin password">
+                    </div>
+
+                    <div>
+                        <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-3 rounded-lg font-semibold hover:from-red-700 hover:to-orange-700 transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Access Admin Panel
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500">
+                            <i class="fas fa-shield-alt text-red-600"></i> This is a secure area. Unauthorized access is prohibited.
+                        </p>
+                    </div>
+                </form>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Default Credentials:</strong><br>
+                        Username: <code class="bg-blue-100 px-2 py-1 rounded">admin</code><br>
+                        Password: <code class="bg-blue-100 px-2 py-1 rounded">admin123</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="/static/utils.js"></script>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            errorDiv.classList.add('hidden');
+            showLoading(submitBtn);
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await axios.post('/api/admin/auth/login', { username, password });
+                if (response.data.success) {
+                    showToast('Login successful! Redirecting to admin panel...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin/dashboard';
+                    }, 1000);
+                }
+            } catch (error) {
+                hideLoading(submitBtn);
+                errorText.textContent = error.response?.data?.error || 'Login failed. Please check your credentials.';
+                errorDiv.classList.remove('hidden');
+                showToast(error.response?.data?.error || 'Login failed', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
