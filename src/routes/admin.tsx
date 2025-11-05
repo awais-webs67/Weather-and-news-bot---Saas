@@ -213,6 +213,101 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     <div id="weatherResult" class="hidden p-4 rounded-lg"></div>
                 </div>
             </div>
+            
+            <!-- News API -->
+            <div class="glass-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center text-red-600">
+                        <i class="fas fa-newspaper text-3xl mr-3"></i>
+                        News API
+                    </h2>
+                    <span id="newsStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
+                        Not Configured
+                    </span>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-key text-red-600"></i> API Key (FREE 100 requests/day)
+                        </label>
+                        <input type="password" id="news_api_key" placeholder="Enter NewsAPI.org key" 
+                            class="input-field">
+                        <p class="text-xs text-gray-500 mt-1">Get FREE key: <a href="https://newsapi.org/register" target="_blank" class="text-red-600 hover:underline font-semibold">newsapi.org/register</a></p>
+                    </div>
+
+                    <button onclick="saveNewsKey()" class="btn-primary w-full">
+                        <i class="fas fa-save mr-2"></i> Save News API Key
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gemini AI -->
+            <div class="glass-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center text-purple-600">
+                        <i class="fas fa-brain text-3xl mr-3"></i>
+                        Gemini AI
+                    </h2>
+                    <span id="geminiStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
+                        Not Configured
+                    </span>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-key text-purple-600"></i> AI API Key
+                        </label>
+                        <input type="password" id="gemini_api_key" placeholder="Enter Gemini API key" 
+                            class="input-field" value="AIzaSyDlz2Lo5IaIou5o28AUc_Txp4c0T2eu8WQ">
+                        <p class="text-xs text-gray-500 mt-1">For AI-powered weather insights & summaries</p>
+                    </div>
+
+                    <button onclick="saveGeminiKey()" class="btn-primary w-full">
+                        <i class="fas fa-save mr-2"></i> Save Gemini Key
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- License Key Generation -->
+        <div class="glass-card mb-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center text-teal-600">
+                <i class="fas fa-key text-3xl mr-3"></i>
+                License Key Generator
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Plan Type</label>
+                    <select id="licensePlan" class="input-field">
+                        <option value="monthly">Monthly ($9.99 - 30 days)</option>
+                        <option value="yearly">Yearly ($95.99 - 365 days)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Duration (days)</label>
+                    <input type="number" id="licenseDuration" value="30" class="input-field">
+                </div>
+            </div>
+            
+            <div class="mt-4 flex space-x-3">
+                <button onclick="generateLicenseKey()" class="btn-primary flex-1">
+                    <i class="fas fa-plus-circle mr-2"></i> Generate License Key
+                </button>
+            </div>
+            
+            <div id="generatedKey" class="hidden mt-4 p-4 bg-green-50 border-2 border-green-500 rounded-lg">
+                <p class="text-sm font-semibold text-gray-700 mb-2">Generated License Key:</p>
+                <div class="flex items-center justify-between">
+                    <code id="keyDisplay" class="text-2xl font-mono font-bold text-green-600"></code>
+                    <button onclick="copyKey()" class="btn-secondary">
+                        <i class="fas fa-copy mr-2"></i> Copy
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- WhatsApp Toggle -->
@@ -582,6 +677,79 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             } catch (error) {
                 console.error('Failed to load logs');
             }
+        }
+
+        async function saveNewsKey() {
+            const apiKey = document.getElementById('news_api_key').value;
+            
+            if (!apiKey) {
+                showToast('Please enter News API key', 'warning');
+                return;
+            }
+            
+            try {
+                await axios.post('/api/admin/settings', {
+                    settings: { news_api_key: apiKey }
+                });
+                document.getElementById('newsStatus').textContent = 'Configured';
+                document.getElementById('newsStatus').className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
+                showToast('News API key saved! Get FREE key at newsapi.org', 'success');
+            } catch (error) {
+                showToast('Failed to save News API key', 'error');
+            }
+        }
+
+        async function saveGeminiKey() {
+            const apiKey = document.getElementById('gemini_api_key').value;
+            
+            if (!apiKey) {
+                showToast('Please enter Gemini API key', 'warning');
+                return;
+            }
+            
+            try {
+                await axios.post('/api/admin/settings', {
+                    settings: { gemini_api_key: apiKey }
+                });
+                document.getElementById('geminiStatus').textContent = 'Configured';
+                document.getElementById('geminiStatus').className = 'px-3 py-1 rounded-full text-sm font-semibold bg-purple-200 text-purple-800';
+                showToast('Gemini AI key saved successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to save Gemini key', 'error');
+            }
+        }
+
+        async function generateLicenseKey() {
+            const planType = document.getElementById('licensePlan').value;
+            const duration = parseInt(document.getElementById('licenseDuration').value);
+            
+            if (!duration || duration < 1) {
+                showToast('Please enter valid duration', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await axios.post('/api/admin/generate-license', {
+                    planType,
+                    durationDays: duration
+                });
+                
+                if (response.data.success) {
+                    document.getElementById('keyDisplay').textContent = response.data.licenseKey;
+                    document.getElementById('generatedKey').classList.remove('hidden');
+                    showToast(\`License key generated: \${response.data.licenseKey}\`, 'success');
+                } else {
+                    showToast('Failed to generate key', 'error');
+                }
+            } catch (error) {
+                showToast('Error generating license key', 'error');
+            }
+        }
+
+        function copyKey() {
+            const key = document.getElementById('keyDisplay').textContent;
+            navigator.clipboard.writeText(key);
+            showToast('License key copied to clipboard!', 'success');
         }
 
         function refreshStats() {
