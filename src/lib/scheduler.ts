@@ -9,6 +9,18 @@ export class MessageScheduler {
   
   async sendScheduledMessages(): Promise<void> {
     try {
+      // Check if Telegram is enabled
+      const telegramEnabledSetting = await this.db.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'telegram_enabled'"
+      ).first()
+      
+      const isTelegramEnabled = telegramEnabledSetting?.setting_value === '1'
+      
+      if (!isTelegramEnabled) {
+        console.log('Telegram is disabled. Skipping scheduled messages.')
+        return
+      }
+      
       // Get current time in UTC
       const now = new Date()
       const currentTimeUTC = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`

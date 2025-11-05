@@ -517,4 +517,68 @@ adminApi.post('/test/get-weather', adminAuthMiddleware, async (c) => {
   }
 })
 
+// AI Feature Suggestions
+adminApi.post('/ai/suggestions', adminAuthMiddleware, async (c) => {
+  try {
+    const { prompt } = await c.req.json()
+    
+    if (!prompt) {
+      return c.json({ error: 'Prompt is required' }, 400)
+    }
+    
+    // Get Gemini API key
+    const geminiSettings = await c.env.DB.prepare(
+      "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+    ).first()
+    
+    if (!geminiSettings || !geminiSettings.setting_value) {
+      return c.json({ 
+        success: false, 
+        error: 'Gemini API key not configured. Please configure it in admin settings.' 
+      }, 400)
+    }
+    
+    const apiKey = geminiSettings.setting_value as string
+    
+    // Create context-aware prompt for SaaS suggestions
+    const systemContext = `You are an expert SaaS consultant helping improve a weather and news alert service called AlertFlow. 
+The service sends automated weather and news updates via Telegram to users. 
+Key features: Weather alerts, news summaries, multi-language support (English/Urdu), scheduled notifications, premium subscriptions.
+
+Provide practical, actionable suggestions that can be implemented. Be specific and prioritize user value.`
+    
+    const fullPrompt = `${systemContext}\n\nUser Question: ${prompt}\n\nProvide detailed, actionable suggestions:`
+    
+    // Call Gemini API
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: fullPrompt }] }]
+        })
+      }
+    )
+    
+    const data = await response.json()
+    
+    if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const suggestions = data.candidates[0].content.parts[0].text
+      
+      return c.json({
+        success: true,
+        suggestions: suggestions
+      })
+    } else {
+      return c.json({
+        success: false,
+        error: data.error?.message || 'Failed to generate suggestions'
+      }, 400)
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 export default adminApi

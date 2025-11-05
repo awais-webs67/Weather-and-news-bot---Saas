@@ -210,11 +210,17 @@ Smart weather & news automation delivered right here! 🌟
         return c.json({ ok: true })
       }
       
+      // Parse command: /news or /news Pakistan or /news India
+      const commandParts = text.trim().split(/\s+/)
+      const requestedCountry = commandParts.length > 1 ? commandParts.slice(1).join(' ') : null
+      
       const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      
+      // Countries NOT supported by NewsAPI top-headlines (need to use search)
+      const unsupportedCountries = ['Pakistan', 'Bangladesh', 'Afghanistan', 'Nepal', 'Sri Lanka', 'Vietnam', 'Iran', 'Iraq']
       
       // Map country names to NewsAPI country codes
       const countryMap: { [key: string]: string } = {
-        'Pakistan': 'us', // Pakistan not supported, use US as fallback
         'United States': 'us', 'USA': 'us', 'America': 'us',
         'United Kingdom': 'gb', 'UK': 'gb', 'England': 'gb',
         'India': 'in', 'China': 'cn', 'Japan': 'jp',
@@ -225,18 +231,41 @@ Smart weather & news automation delivered right here! 🌟
         'Saudi Arabia': 'sa', 'Argentina': 'ar', 'South Africa': 'za',
         'Egypt': 'eg', 'UAE': 'ae', 'United Arab Emirates': 'ae',
         'Malaysia': 'my', 'Singapore': 'sg', 'Philippines': 'ph',
-        'Thailand': 'th', 'Vietnam': 'us', 'Bangladesh': 'us',
-        'Iran': 'us', 'Iraq': 'us', 'Afghanistan': 'us'
+        'Thailand': 'th'
       }
       
-      const countryCode = countryMap[location?.country as string] || 'us'
-      const newsResult = await newsAPI.getTopHeadlines(countryCode)
+      const targetCountry = requestedCountry || (location?.country as string)
       
-      if (newsResult.success && newsResult.articles) {
-        const msg = formatNewsMessage(newsResult.articles, location?.language as string || 'en')
-        await bot.sendMessage(chatId, msg)
+      let newsResult
+      
+      // Check if country is unsupported - use search API
+      if (targetCountry && unsupportedCountries.includes(targetCountry)) {
+        const searchQuery = `${targetCountry} news`
+        newsResult = await newsAPI.searchNews(searchQuery)
+        
+        if (newsResult.success && newsResult.articles && newsResult.articles.length > 0) {
+          const headerMsg = location?.language === 'ur' 
+            ? `📰 <b>${targetCountry} کی تازہ خبریں</b>\n\n` 
+            : `📰 <b>Latest News from ${targetCountry}</b>\n\n`
+          const msg = headerMsg + formatNewsMessage(newsResult.articles, location?.language as string || 'en')
+          await bot.sendMessage(chatId, msg)
+        } else {
+          const errorMsg = location?.language === 'ur'
+            ? `⚠️ ${targetCountry} کی خبریں نہیں مل سکیں۔`
+            : `⚠️ Could not find news for ${targetCountry}.`
+          await bot.sendMessage(chatId, errorMsg)
+        }
       } else {
-        await bot.sendMessage(chatId, `⚠️ Failed to fetch news: ${newsResult.error}`)
+        // Use top-headlines API for supported countries
+        const countryCode = countryMap[targetCountry] || 'us'
+        newsResult = await newsAPI.getTopHeadlines(countryCode)
+        
+        if (newsResult.success && newsResult.articles) {
+          const msg = formatNewsMessage(newsResult.articles, location?.language as string || 'en')
+          await bot.sendMessage(chatId, msg)
+        } else {
+          await bot.sendMessage(chatId, `⚠️ Failed to fetch news: ${newsResult.error}`)
+        }
       }
     }
     else if (text.startsWith('/forecast') || text.startsWith('/7day')) {

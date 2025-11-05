@@ -475,6 +475,71 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
         </div>
 
+        <!-- AI-Powered Feature Suggestions -->
+        <div class="glass-card mb-8">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 flex items-center gradient-text">
+                <i class="fas fa-brain text-3xl md:text-4xl mr-3"></i>
+                AI Feature Suggestions
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Get intelligent suggestions to improve your SaaS using Gemini AI</p>
+            
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-4 md:p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-lightbulb text-yellow-500"></i> Ask AI for Suggestions
+                    </label>
+                    <textarea id="aiPrompt" rows="3" placeholder="e.g., How can I improve user engagement? What features should I add for weather alerts?" 
+                        class="input-field resize-none"></textarea>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                    <button onclick="getAISuggestions()" class="btn-primary flex-1">
+                        <i class="fas fa-magic mr-2"></i> Get AI Suggestions
+                    </button>
+                    <button onclick="loadPresetSuggestions()" class="btn-secondary">
+                        <i class="fas fa-list mr-2"></i> <span class="hidden sm:inline">Preset Questions</span><span class="sm:hidden">Presets</span>
+                    </button>
+                </div>
+                
+                <div id="aiSuggestionsResult" class="hidden">
+                    <div class="bg-white rounded-lg border-2 border-purple-300 p-4">
+                        <h3 class="font-bold text-lg text-purple-700 mb-3 flex items-center">
+                            <i class="fas fa-robot mr-2"></i> AI Recommendations
+                        </h3>
+                        <div id="aiSuggestionsContent" class="text-gray-700 prose prose-sm max-w-none"></div>
+                    </div>
+                </div>
+                
+                <!-- Preset Suggestions -->
+                <div id="presetSuggestions" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button onclick="askAI('How can I improve user retention and engagement?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-users text-purple-500 mr-2"></i>
+                        <span class="text-sm font-medium">Improve User Engagement</span>
+                    </button>
+                    <button onclick="askAI('What new features should I add to my weather and news SaaS?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-plus-circle text-blue-500 mr-2"></i>
+                        <span class="text-sm font-medium">New Feature Ideas</span>
+                    </button>
+                    <button onclick="askAI('How can I monetize my SaaS better?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
+                        <span class="text-sm font-medium">Monetization Strategies</span>
+                    </button>
+                    <button onclick="askAI('What marketing strategies work best for B2C SaaS?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-bullhorn text-orange-500 mr-2"></i>
+                        <span class="text-sm font-medium">Marketing Ideas</span>
+                    </button>
+                    <button onclick="askAI('How can I improve the UX/UI of my application?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-paint-brush text-pink-500 mr-2"></i>
+                        <span class="text-sm font-medium">UX/UI Improvements</span>
+                    </button>
+                    <button onclick="askAI('What analytics and metrics should I track?')" class="text-left p-3 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all">
+                        <i class="fas fa-chart-line text-teal-500 mr-2"></i>
+                        <span class="text-sm font-medium">Analytics & Metrics</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <!-- User Management -->
         <div class="glass-card mb-8">
             <div class="flex items-center justify-between mb-6">
@@ -1087,6 +1152,63 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         function refreshStats() {
             loadStats();
             showToast('Stats refreshed', 'info');
+        }
+        
+        // AI Feature Suggestions
+        function loadPresetSuggestions() {
+            const presetsDiv = document.getElementById('presetSuggestions');
+            if (presetsDiv.classList.contains('hidden')) {
+                presetsDiv.classList.remove('hidden');
+            } else {
+                presetsDiv.classList.add('hidden');
+            }
+        }
+        
+        function askAI(question) {
+            document.getElementById('aiPrompt').value = question;
+            document.getElementById('presetSuggestions').classList.add('hidden');
+            getAISuggestions();
+        }
+        
+        async function getAISuggestions() {
+            const prompt = document.getElementById('aiPrompt').value.trim();
+            const resultDiv = document.getElementById('aiSuggestionsResult');
+            const contentDiv = document.getElementById('aiSuggestionsContent');
+            
+            if (!prompt) {
+                showToast('Please enter a question or select a preset', 'warning');
+                return;
+            }
+            
+            // Show loading
+            resultDiv.classList.remove('hidden');
+            contentDiv.innerHTML = '<div class="flex items-center justify-center py-8"><div class="spinner"></div><span class="ml-3 text-gray-600">AI is thinking...</span></div>';
+            
+            try {
+                // Get Gemini API key from settings
+                const response = await axios.post('/api/admin/ai/suggestions', { prompt });
+                
+                if (response.data.success) {
+                    const suggestions = response.data.suggestions;
+                    
+                    // Format the response with better HTML
+                    const formattedSuggestions = suggestions
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n\n/g, '</p><p class="mb-3">')
+                        .replace(/\n- /g, '<br/>• ')
+                        .replace(/\n\d+\. /g, '<br/><strong>$&</strong>');
+                    
+                    contentDiv.innerHTML = '<p class="mb-3">' + formattedSuggestions + '</p>';
+                    showToast('AI suggestions generated successfully!', 'success');
+                } else {
+                    contentDiv.innerHTML = '<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i>' + (response.data.error || 'Failed to get AI suggestions') + '</div>';
+                    showToast('Failed to get AI suggestions', 'error');
+                }
+            } catch (error) {
+                console.error('AI suggestions error:', error);
+                contentDiv.innerHTML = '<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i>Failed to connect to AI service. Please check your Gemini API key in settings.</div>';
+                showToast('Failed to get AI suggestions', 'error');
+            }
         }
 
         async function logout() {

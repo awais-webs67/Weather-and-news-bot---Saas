@@ -96,7 +96,7 @@ export class TelegramBot {
         { command: 'start', description: '🚀 Start the bot and get welcome message' },
         { command: 'weather', description: '🌤️ Get your local weather update' },
         { command: 'checkweather', description: '🌍 Check weather for any city worldwide' },
-        { command: 'news', description: '📰 Get latest news summary' },
+        { command: 'news', description: '📰 Get latest news (or /news Pakistan for specific country)' },
         { command: 'settings', description: '⚙️ View your settings' },
         { command: 'help', description: '❓ Get help and usage guide' }
       ]
