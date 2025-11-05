@@ -1215,6 +1215,33 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             }
         }
 
+        // Make all functions globally accessible
+        window.toggleAdminMenu = toggleAdminMenu;
+        window.init = init;
+        window.loadStats = loadStats;
+        window.loadSettings = loadSettings;
+        window.testTelegram = testTelegram;
+        window.testWeather = testWeather;
+        window.saveTelegramKey = saveTelegramKey;
+        window.saveWeatherKey = saveWeatherKey;
+        window.loadUsers = loadUsers;
+        window.loadLogs = loadLogs;
+        window.saveNewsKey = saveNewsKey;
+        window.saveGeminiKey = saveGeminiKey;
+        window.toggleTelegram = toggleTelegram;
+        window.toggleWhatsApp = toggleWhatsApp;
+        window.testNews = testNews;
+        window.testGemini = testGemini;
+        window.testGNews = testGNews;
+        window.saveGNewsKey = saveGNewsKey;
+        window.generateLicenseKey = generateLicenseKey;
+        window.copyKey = copyKey;
+        window.refreshStats = refreshStats;
+        window.loadPresetSuggestions = loadPresetSuggestions;
+        window.askAI = askAI;
+        window.getAISuggestions = getAISuggestions;
+        window.logout = logout;
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing admin panel...');
