@@ -353,22 +353,32 @@ api.get('/telegram/get-chat-id', authMiddleware, async (c) => {
       })
     }
     
-    // Find messages from user
+    // Find messages from user (case-insensitive)
     const userUpdates = result.updates.filter((update: any) => {
       const message = update.message || update.edited_message
       if (!message) return false
       
-      const username = message.from?.username
-      const userTelegramUsername = user.telegram_username?.replace('@', '')
+      const username = message.from?.username?.toLowerCase()
+      const userTelegramUsername = user.telegram_username?.replace('@', '').toLowerCase()
       
       return username && userTelegramUsername && username === userTelegramUsername
     })
     
     if (userUpdates.length === 0) {
+      // Debug: Show what username we're looking for
+      const debugInfo = {
+        lookingFor: user.telegram_username?.replace('@', ''),
+        foundUsers: result.updates.map((u: any) => {
+          const msg = u.message || u.edited_message
+          return msg?.from?.username || 'no username'
+        }).filter((u, i, arr) => arr.indexOf(u) === i)
+      }
+      
       return c.json({
         success: false,
-        error: 'No messages found from your account. Please send /start to the bot first.',
-        hint: 'Make sure you have started a chat with the bot and your username matches.'
+        error: `No messages found. Looking for: @${debugInfo.lookingFor}`,
+        hint: `Bot: @AivraSols_bot. Found users: ${debugInfo.foundUsers.join(', ')}`,
+        debug: debugInfo
       })
     }
     
