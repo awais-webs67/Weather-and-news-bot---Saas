@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Bindings } from '../types'
-import { TelegramBot, WeatherAPI, NewsAPI, formatWeatherMessage, formatNewsMessage } from '../lib/integrations'
+import { TelegramBot, WeatherAPI, NewsAPI, GNewsAPI, formatWeatherMessage, formatNewsMessage } from '../lib/integrations'
 
 const webhook = new Hono<{ Bindings: Bindings }>()
 
@@ -266,6 +266,83 @@ Smart weather & news automation delivered right here! 🌟
         } else {
           await bot.sendMessage(chatId, `⚠️ Failed to fetch news: ${newsResult.error}`)
         }
+      }
+    }
+    else if (text.startsWith('/checknews')) {
+      // Get news for any country without authentication
+      const commandParts = text.trim().split(/\s+/)
+      const countryQuery = commandParts.length > 1 ? commandParts.slice(1).join(' ') : null
+      
+      if (!countryQuery) {
+        const helpMsg = `
+╔══════════════════════════╗
+📰 <b>Check News Anywhere</b>
+╚══════════════════════════╝
+
+<b>Usage:</b>
+/checknews Country Name
+
+<b>Examples:</b>
+• /checknews Pakistan
+• /checknews India
+• /checknews United States
+• /checknews United Kingdom
+• /checknews Japan
+
+<b>Supported:</b> All countries worldwide
+        `.trim()
+        await bot.sendMessage(chatId, helpMsg)
+        return c.json({ ok: true })
+      }
+      
+      // Check for GNews API key first (supports all countries)
+      const gnewsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'gnews_api_key'"
+      ).first()
+      
+      // Fallback to NewsAPI if GNews not configured
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!gnewsSettings?.setting_value && !newsSettings?.setting_value) {
+        await bot.sendMessage(chatId, '📰 <b>News Feature</b>\n\nNews service not configured yet. Contact admin to enable news updates.')
+        return c.json({ ok: true })
+      }
+      
+      let newsResult
+      
+      // Try GNews API first (better country coverage)
+      if (gnewsSettings?.setting_value) {
+        const gnewsAPI = new GNewsAPI(gnewsSettings.setting_value as string)
+        
+        // GNews country codes (2-letter ISO codes)
+        const gnewsCountryMap: { [key: string]: string } = {
+          'Pakistan': 'pk', 'India': 'in', 'United States': 'us', 'USA': 'us',
+          'United Kingdom': 'gb', 'UK': 'gb', 'China': 'cn', 'Japan': 'jp',
+          'Germany': 'de', 'France': 'fr', 'Canada': 'ca', 'Australia': 'au',
+          'Brazil': 'br', 'Russia': 'ru', 'Mexico': 'mx', 'South Korea': 'kr',
+          'Indonesia': 'id', 'Turkey': 'tr', 'Saudi Arabia': 'sa', 'Italy': 'it',
+          'Spain': 'es', 'Argentina': 'ar', 'Bangladesh': 'bd', 'Egypt': 'eg',
+          'Iran': 'ir', 'Thailand': 'th', 'Vietnam': 'vn', 'Philippines': 'ph',
+          'Malaysia': 'my', 'Singapore': 'sg', 'UAE': 'ae', 'Afghanistan': 'af'
+        }
+        
+        const countryCode = gnewsCountryMap[countryQuery] || 'us'
+        newsResult = await gnewsAPI.getTopHeadlines(countryCode, 5)
+      } else {
+        // Fallback to NewsAPI search
+        const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+        const searchQuery = `${countryQuery} news`
+        newsResult = await newsAPI.searchNews(searchQuery)
+      }
+      
+      if (newsResult.success && newsResult.articles && newsResult.articles.length > 0) {
+        const headerMsg = `📰 <b>Latest News from ${countryQuery}</b>\n\n`
+        const msg = headerMsg + formatNewsMessage(newsResult.articles, 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Could not find news for ${countryQuery}. Try a different country name.`)
       }
     }
     else if (text.startsWith('/forecast') || text.startsWith('/7day')) {

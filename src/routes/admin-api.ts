@@ -517,6 +517,67 @@ adminApi.post('/test/get-weather', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Test GNews API
+adminApi.post('/test/gnews', adminAuthMiddleware, async (c) => {
+  try {
+    const { apiKey } = await c.req.json()
+    
+    if (!apiKey) {
+      return c.json({ error: 'API key is required' }, 400)
+    }
+    
+    // Test with Pakistan as it's not supported by NewsAPI
+    const testUrl = `https://gnews.io/api/v4/top-headlines?country=pk&lang=en&max=3&apikey=${apiKey}`
+    
+    const response = await fetch(testUrl, {
+      headers: {
+        'User-Agent': 'AlertFlow/1.0',
+        'Accept': 'application/json'
+      }
+    })
+    
+    const data = await response.json()
+    
+    // Log the test
+    const logger = new APILogger(c.env.DB)
+    
+    if (response.ok && data.articles) {
+      await logger.log(
+        'gnews',
+        'test_connection',
+        true,
+        JSON.stringify({ country: 'Pakistan' }),
+        undefined
+      )
+      
+      return c.json({
+        success: true,
+        data: {
+          count: data.articles.length,
+          headlines: data.articles.map((a: any) => a.title)
+        }
+      })
+    } else {
+      const errorMsg = data.errors?.[0] || data.message || 'Failed to fetch news'
+      
+      await logger.log(
+        'gnews',
+        'test_connection',
+        false,
+        undefined,
+        errorMsg
+      )
+      
+      return c.json({
+        success: false,
+        error: errorMsg
+      }, 400)
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // AI Feature Suggestions
 adminApi.post('/ai/suggestions', adminAuthMiddleware, async (c) => {
   try {

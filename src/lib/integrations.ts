@@ -97,6 +97,7 @@ export class TelegramBot {
         { command: 'weather', description: '🌤️ Get your local weather update' },
         { command: 'checkweather', description: '🌍 Check weather for any city worldwide' },
         { command: 'news', description: '📰 Get latest news (or /news Pakistan for specific country)' },
+        { command: 'checknews', description: '🌐 Check news from any country worldwide' },
         { command: 'settings', description: '⚙️ View your settings' },
         { command: 'help', description: '❓ Get help and usage guide' }
       ]
@@ -309,6 +310,103 @@ export class APILogger {
 }
 
 // News API Integration
+// GNews API Integration (Free, supports ALL countries)
+export class GNewsAPI {
+  private apiKey: string
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
+
+  async getTopHeadlines(country: string = 'us', maxResults: number = 5): Promise<{ success: boolean; articles?: any[]; error?: string }> {
+    try {
+      if (!this.apiKey || this.apiKey.trim() === '' || this.apiKey === 'your-api-key') {
+        return {
+          success: false,
+          error: 'GNews API key not configured. Please contact admin.'
+        }
+      }
+
+      const url = `https://gnews.io/api/v4/top-headlines?country=${country}&lang=en&max=${maxResults}&apikey=${this.apiKey}`
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'AlertFlow/1.0',
+          'Accept': 'application/json'
+        }
+      })
+      const data = await response.json()
+      
+      if (response.ok && data.articles) {
+        return {
+          success: true,
+          articles: data.articles.map((article: any) => ({
+            title: article.title,
+            description: article.description,
+            url: article.url,
+            source: { name: article.source.name },
+            publishedAt: article.publishedAt
+          }))
+        }
+      } else {
+        return {
+          success: false,
+          error: data.message || data.errors?.[0] || 'Failed to fetch news'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
+
+  async searchNews(query: string, maxResults: number = 5): Promise<{ success: boolean; articles?: any[]; error?: string }> {
+    try {
+      if (!this.apiKey || this.apiKey.trim() === '' || this.apiKey === 'your-api-key') {
+        return {
+          success: false,
+          error: 'GNews API key not configured. Please contact admin.'
+        }
+      }
+      
+      const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=${maxResults}&apikey=${this.apiKey}`
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'AlertFlow/1.0',
+          'Accept': 'application/json'
+        }
+      })
+      const data = await response.json()
+      
+      if (response.ok && data.articles) {
+        return {
+          success: true,
+          articles: data.articles.map((article: any) => ({
+            title: article.title,
+            description: article.description,
+            url: article.url,
+            source: { name: article.source.name },
+            publishedAt: article.publishedAt
+          }))
+        }
+      } else {
+        return {
+          success: false,
+          error: data.message || data.errors?.[0] || 'Failed to search news'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
+}
+
 export class NewsAPI {
   private apiKey: string
 

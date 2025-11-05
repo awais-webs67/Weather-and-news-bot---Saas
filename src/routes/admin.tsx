@@ -279,6 +279,44 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 </div>
             </div>
 
+            <!-- GNews API (Better for ALL countries) -->
+            <div class="glass-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center text-green-600">
+                        <i class="fas fa-globe text-3xl mr-3"></i>
+                        GNews API
+                    </h2>
+                    <span id="gnewsStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
+                        Not Tested
+                    </span>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-key text-green-600"></i> API Key (FREE - Supports ALL Countries!)
+                        </label>
+                        <input type="password" id="gnews_api_key" placeholder="Enter GNews API key" 
+                            class="input-field">
+                        <p class="text-xs text-gray-500 mt-1">
+                            <strong>✨ Best for Pakistan & all countries!</strong><br/>
+                            Get FREE key (100/day): <a href="https://gnews.io/" target="_blank" class="text-green-600 hover:underline font-semibold">gnews.io</a>
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button onclick="testGNews()" class="btn-primary flex-1">
+                            <i class="fas fa-vial mr-2"></i> Test Connection
+                        </button>
+                        <button onclick="saveGNewsKey()" class="btn-secondary">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+
+                    <div id="gnewsResult" class="hidden p-4 rounded-lg"></div>
+                </div>
+            </div>
+
             <!-- Gemini AI -->
             <div class="glass-card">
                 <div class="flex items-center justify-between mb-6">
@@ -658,6 +696,15 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     }
                     if (settings.weather_api_key) {
                         document.getElementById('weather_api_key').value = settings.weather_api_key;
+                    }
+                    if (settings.news_api_key) {
+                        document.getElementById('news_api_key').value = settings.news_api_key;
+                    }
+                    if (settings.gnews_api_key) {
+                        document.getElementById('gnews_api_key').value = settings.gnews_api_key;
+                    }
+                    if (settings.gemini_api_key) {
+                        document.getElementById('gemini_api_key').value = settings.gemini_api_key;
                     }
                 }
             } catch (error) {
@@ -1114,6 +1161,65 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             }
             
             await loadLogs();
+        }
+
+        async function testGNews() {
+            const apiKey = document.getElementById('gnews_api_key').value;
+            const resultDiv = document.getElementById('gnewsResult');
+            const statusBadge = document.getElementById('gnewsStatus');
+            
+            if (!apiKey) {
+                showToast('Please enter GNews API key', 'warning');
+                return;
+            }
+            
+            resultDiv.classList.add('hidden');
+            statusBadge.textContent = 'Testing...';
+            statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-yellow-200 text-yellow-800';
+            
+            try {
+                const response = await axios.post('/api/admin/test/gnews', { apiKey });
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                    resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i><div class="flex-1"><p class="font-semibold text-green-800">✅ Connection Successful!</p><p class="text-sm text-green-700 mt-1">Headlines Fetched: <strong>' + data.count + '</strong></p><div class="mt-2 text-xs text-green-700"><p class="font-semibold">Sample Headlines:</p><ul class="list-disc list-inside mt-1">' + data.headlines.map(h => '<li class="truncate">' + h + '</li>').join('') + '</ul></div></div></div>';
+                    statusBadge.textContent = '✅ Working';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
+                    showToast('GNews API connected successfully!', 'success');
+                } else {
+                    throw new Error(response.data.error || 'Test failed');
+                }
+                
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i><div><p class="font-semibold text-red-800">❌ Connection Failed</p><p class="text-sm text-red-700 mt-1">' + (error.response?.data?.error || error.message) + '</p><p class="text-xs text-red-600 mt-2">Get FREE key at: <a href="https://gnews.io/" target="_blank" class="underline">gnews.io</a></p></div></div>';
+                statusBadge.textContent = '❌ Failed';
+                statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
+                resultDiv.classList.remove('hidden');
+                showToast('GNews API test failed', 'error');
+            }
+            
+            await loadLogs();
+        }
+        
+        async function saveGNewsKey() {
+            const apiKey = document.getElementById('gnews_api_key').value;
+            
+            if (!apiKey) {
+                showToast('Please enter GNews API key', 'warning');
+                return;
+            }
+            
+            try {
+                await axios.post('/api/admin/settings', {
+                    settings: { gnews_api_key: apiKey }
+                });
+                showToast('GNews API key saved successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to save GNews API key', 'error');
+            }
         }
 
         async function generateLicenseKey() {
