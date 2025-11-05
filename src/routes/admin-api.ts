@@ -264,6 +264,19 @@ adminApi.get('/logs', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Manual trigger for scheduler (testing)
+adminApi.post('/trigger-scheduler', adminAuthMiddleware, async (c) => {
+  try {
+    const { MessageScheduler } = await import('../lib/scheduler')
+    const scheduler = new MessageScheduler(c.env.DB)
+    await scheduler.sendScheduledMessages()
+    
+    return c.json({ success: true, message: 'Scheduler triggered successfully' })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // Get users
 adminApi.get('/users', adminAuthMiddleware, async (c) => {
   try {

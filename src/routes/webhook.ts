@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Bindings } from '../types'
-import { TelegramBot, WeatherAPI, formatWeatherMessage } from '../lib/integrations'
+import { TelegramBot, WeatherAPI, NewsAPI, formatWeatherMessage, formatNewsMessage } from '../lib/integrations'
 
 const webhook = new Hono<{ Bindings: Bindings }>()
 
@@ -109,7 +109,73 @@ Visit: ${c.req.header('origin') || 'https://webapp.pages.dev'}
       }
     }
     else if (text.startsWith('/news')) {
-      await bot.sendMessage(chatId, '📰 <b>News Feature</b>\n\nNews updates coming soon! We\'re working on bringing you the latest headlines.\n\nStay tuned! 📱')
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 <b>News Feature</b>\n\nNews service not configured yet. Contact admin to enable news updates.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const countryCode = location?.country === 'Pakistan' ? 'pk' : 'us'
+      const newsResult = await newsAPI.getTopHeadlines(countryCode)
+      
+      if (newsResult.success && newsResult.articles) {
+        const msg = formatNewsMessage(newsResult.articles, location?.language as string || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to fetch news: ${newsResult.error}`)
+      }
+    }
+    else if (text.startsWith('/forecast') || text.startsWith('/7day')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const forecast = await weatherAPI.getForecast(location.city as string, location.country as string)
+      
+      if (forecast.success && forecast.data) {
+        let msg = `📅 <b>7-Day Forecast for ${forecast.data.city}, ${forecast.data.country}</b>\n\n`
+        forecast.data.forecast.forEach((item: any) => {
+          const temp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
+          const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+          msg += `📆 ${item.time}\n🌡️ ${temp}${unit} - ${item.description}\n\n`
+        })
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
+      }
     }
     else if (text.startsWith('/settings')) {
       if (!user) {
@@ -151,18 +217,24 @@ Visit: ${c.req.header('origin') || 'https://webapp.pages.dev'}
       const helpMsg = `
 <b>❓ Help & Usage</b>
 
-<b>Commands:</b>
+<b>Weather Commands:</b>
+/weather - Current weather
+/forecast or /7day - 7-day forecast
+/weather <city> - Weather for any city
+
+<b>News Commands:</b>
+/news - Top headlines
+
+<b>Other Commands:</b>
 /start - Start the bot
-/weather - Get current weather
-/news - Get latest news
 /settings - View your settings
 /help - Show this help
 
 <b>Features:</b>
-• Automated daily weather updates
-• Local news summaries
+• Automated daily weather & news
+• 7-day weather forecasts
+• Multi-language support (EN/UR)
 • Custom notification schedules
-• Multiple languages support
 
 <b>Need more help?</b>
 Visit our website or contact support.

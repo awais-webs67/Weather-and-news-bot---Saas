@@ -307,10 +307,91 @@ export class APILogger {
   }
 }
 
+// News API Integration
+export class NewsAPI {
+  private apiKey: string
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
+
+  async getTopHeadlines(country: string = 'us', category?: string): Promise<{ success: boolean; articles?: any[]; error?: string }> {
+    try {
+      let url = `https://newsapi.org/v2/top-headlines?country=${country.toLowerCase()}&apiKey=${this.apiKey}`
+      if (category) {
+        url += `&category=${category}`
+      }
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (response.ok && data.status === 'ok') {
+        return {
+          success: true,
+          articles: data.articles?.slice(0, 5) || []
+        }
+      } else {
+        return {
+          success: false,
+          error: data.message || 'Failed to fetch news'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
+
+  async searchNews(query: string): Promise<{ success: boolean; articles?: any[]; error?: string }> {
+    try {
+      const response = await fetch(
+        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&apiKey=${this.apiKey}`
+      )
+      const data = await response.json()
+      
+      if (response.ok && data.status === 'ok') {
+        return {
+          success: true,
+          articles: data.articles?.slice(0, 5) || []
+        }
+      } else {
+        return {
+          success: false,
+          error: data.message || 'Failed to search news'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
+}
+
 // Helper function to format weather message
-export function formatWeatherMessage(data: any, temperatureUnit: string = 'C'): string {
+export function formatWeatherMessage(data: any, temperatureUnit: string = 'C', language: string = 'en'): string {
   const temp = temperatureUnit === 'F' ? (data.temperature * 9/5 + 32).toFixed(1) : data.temperature.toFixed(1)
   const unit = temperatureUnit === 'F' ? '°F' : '°C'
+  
+  if (language === 'ur') {
+    return `
+🌤️ <b>${data.city}, ${data.country} کے لیے موسم کی اپ ڈیٹ</b>
+
+🌡️ درجہ حرارت: ${temp}${unit}
+🤔 محسوس ہوتا ہے: ${temperatureUnit === 'F' ? (data.feels_like * 9/5 + 32).toFixed(1) : data.feels_like.toFixed(1)}${unit}
+📊 زیادہ سے زیادہ/کم از کم: ${temperatureUnit === 'F' ? (data.temp_max * 9/5 + 32).toFixed(1) : data.temp_max.toFixed(1)}${unit} / ${temperatureUnit === 'F' ? (data.temp_min * 9/5 + 32).toFixed(1) : data.temp_min.toFixed(1)}${unit}
+
+☁️ حالت: ${data.description}
+💧 نمی: ${data.humidity}%
+💨 ہوا: ${data.wind_speed} میٹر/سیکنڈ
+☁️ بادل: ${data.clouds}%
+
+آپ کا دن اچھا گزرے! ☀️
+    `.trim()
+  }
   
   return `
 🌤️ <b>Weather Update for ${data.city}, ${data.country}</b>
@@ -326,4 +407,28 @@ export function formatWeatherMessage(data: any, temperatureUnit: string = 'C'): 
 
 Have a great day! ☀️
   `.trim()
+}
+
+// Helper function to format news message
+export function formatNewsMessage(articles: any[], language: string = 'en'): string {
+  if (!articles || articles.length === 0) {
+    return language === 'ur' 
+      ? '📰 کوئی خبر دستیاب نہیں ہے۔'
+      : '📰 No news available.'
+  }
+
+  const header = language === 'ur' 
+    ? '📰 <b>آج کی اہم خبریں</b>\n\n'
+    : '📰 <b>Today\'s Top Headlines</b>\n\n'
+  
+  let message = header
+  
+  articles.forEach((article, index) => {
+    const title = article.title || 'No title'
+    const source = article.source?.name || 'Unknown'
+    message += `${index + 1}. <b>${title}</b>\n`
+    message += `   📍 ${source}\n\n`
+  })
+  
+  return message.trim()
 }

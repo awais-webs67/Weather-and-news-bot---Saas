@@ -1,4 +1,4 @@
-import { TelegramBot, WeatherAPI, formatWeatherMessage } from './integrations'
+import { TelegramBot, WeatherAPI, NewsAPI, formatWeatherMessage, formatNewsMessage } from './integrations'
 
 export class MessageScheduler {
   private db: D1Database
@@ -80,16 +80,41 @@ export class MessageScheduler {
               
               if (weather.success && weather.data) {
                 const timeOfDay = schedule.schedule_type === 'weather_morning' ? '🌅 Good Morning' : '🌙 Good Evening'
-                message = `${timeOfDay}!\n\n` + formatWeatherMessage(weather.data, schedule.temperature_unit as string || 'C')
+                const greeting = schedule.language === 'ur' ? (schedule.schedule_type === 'weather_morning' ? '🌅 صبح بخیر' : '🌙 شام بخیر') : timeOfDay
+                message = `${greeting}!\n\n` + formatWeatherMessage(weather.data, schedule.temperature_unit as string || 'C', schedule.language as string || 'en')
               } else {
-                message = `⚠️ Weather update failed: ${weather.error}`
+                message = schedule.language === 'ur' 
+                  ? `⚠️ موسم کی اپ ڈیٹ ناکام: ${weather.error}`
+                  : `⚠️ Weather update failed: ${weather.error}`
               }
             } else {
-              message = '⚠️ Please set your location in dashboard to receive weather updates.'
+              message = schedule.language === 'ur'
+                ? '⚠️ براہ کرم موسم کی اپ ڈیٹس حاصل کرنے کے لیے ڈیش بورڈ میں اپنا مقام سیٹ کریں۔'
+                : '⚠️ Please set your location in dashboard to receive weather updates.'
             }
           } else if (schedule.schedule_type === 'news') {
-            // Send news update (placeholder for now)
-            message = `📰 <b>Daily News Summary</b>\n\n🔹 News feature coming soon!\nWe're working on bringing you the latest news updates.\n\nStay tuned! 📱`
+            // Get news API key
+            const newsSettings = await this.db.prepare(
+              "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+            ).first()
+            
+            if (newsSettings && newsSettings.setting_value) {
+              const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+              const countryCode = schedule.country === 'Pakistan' ? 'pk' : 'us'
+              const newsResult = await newsAPI.getTopHeadlines(countryCode)
+              
+              if (newsResult.success && newsResult.articles) {
+                message = formatNewsMessage(newsResult.articles, schedule.language as string || 'en')
+              } else {
+                message = schedule.language === 'ur'
+                  ? `📰 <b>خبروں کا خلاصہ</b>\n\n⚠️ خبریں حاصل کرنے میں ناکامی: ${newsResult.error}`
+                  : `📰 <b>News Summary</b>\n\n⚠️ Failed to fetch news: ${newsResult.error}`
+              }
+            } else {
+              message = schedule.language === 'ur'
+                ? `📰 <b>روزانہ خبروں کا خلاصہ</b>\n\n🔹 خبروں کی سروس ابھی دستیاب نہیں ہے۔\nہم جلد ہی آپ کے لیے تازہ ترین خبریں لا رہے ہیں۔\n\nانتظار کریں! 📱`
+                : `📰 <b>Daily News Summary</b>\n\n🔹 News service not configured yet.\nWe're working on bringing you the latest news updates.\n\nStay tuned! 📱`
+            }
           }
           
           if (message && schedule.telegram_chat_id) {
