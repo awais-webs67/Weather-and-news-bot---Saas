@@ -443,6 +443,129 @@ adminApi.get('/users', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Add new user
+adminApi.post('/users', adminAuthMiddleware, async (c) => {
+  try {
+    const { email, name, subscription_plan, subscription_status } = await c.req.json()
+    
+    if (!email) {
+      return c.json({ error: 'Email is required' }, 400)
+    }
+    
+    // Check if email already exists
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ?'
+    ).bind(email).first()
+    
+    if (existing) {
+      return c.json({ error: 'Email already exists' }, 400)
+    }
+    
+    // Insert new user
+    const result = await c.env.DB.prepare(`
+      INSERT INTO users (email, name, subscription_plan, subscription_status, created_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(
+      email,
+      name || null,
+      subscription_plan || 'free',
+      subscription_status || 'active'
+    ).run()
+    
+    if (result.success) {
+      return c.json({ 
+        success: true, 
+        message: 'User added successfully',
+        userId: result.meta.last_row_id 
+      })
+    } else {
+      return c.json({ error: 'Failed to add user' }, 500)
+    }
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// Update user
+adminApi.put('/users/:id', adminAuthMiddleware, async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const { email, name, subscription_plan, subscription_status } = await c.req.json()
+    
+    if (!email) {
+      return c.json({ error: 'Email is required' }, 400)
+    }
+    
+    // Check if user exists
+    const user = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE id = ?'
+    ).bind(userId).first()
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+    
+    // Check if email is taken by another user
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ? AND id != ?'
+    ).bind(email, userId).first()
+    
+    if (existing) {
+      return c.json({ error: 'Email already exists' }, 400)
+    }
+    
+    // Update user
+    const result = await c.env.DB.prepare(`
+      UPDATE users 
+      SET email = ?, name = ?, subscription_plan = ?, subscription_status = ?
+      WHERE id = ?
+    `).bind(
+      email,
+      name || null,
+      subscription_plan || 'free',
+      subscription_status || 'active',
+      userId
+    ).run()
+    
+    if (result.success) {
+      return c.json({ success: true, message: 'User updated successfully' })
+    } else {
+      return c.json({ error: 'Failed to update user' }, 500)
+    }
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// Delete user
+adminApi.delete('/users/:id', adminAuthMiddleware, async (c) => {
+  try {
+    const userId = c.req.param('id')
+    
+    // Check if user exists
+    const user = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE id = ?'
+    ).bind(userId).first()
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+    
+    // Delete user (will cascade delete related data based on foreign keys)
+    const result = await c.env.DB.prepare(
+      'DELETE FROM users WHERE id = ?'
+    ).bind(userId).run()
+    
+    if (result.success) {
+      return c.json({ success: true, message: 'User deleted successfully' })
+    } else {
+      return c.json({ error: 'Failed to delete user' }, 500)
+    }
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
 // Send test notification
 adminApi.post('/test/send-message', adminAuthMiddleware, async (c) => {
   try {
