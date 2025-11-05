@@ -743,17 +743,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 if (response.data.success) {
                     const data = response.data.data;
                     resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = \`
-                        <div class="flex items-start">
-                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
-                            <div>
-                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
-                                <p class="text-sm text-green-700 mt-1">Bot Name: <strong>\${data.bot_name}</strong></p>
-                                <p class="text-sm text-green-700">Username: @\${data.username}</p>
-                                <p class="text-sm text-green-700">Bot ID: \${data.bot_id}</p>
-                            </div>
-                        </div>
-                    \`;
+                    resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i><div><p class="font-semibold text-green-800">✅ Connection Successful!</p><p class="text-sm text-green-700 mt-1">Bot Name: <strong>' + data.bot_name + '</strong></p><p class="text-sm text-green-700">Username: @' + data.username + '</p><p class="text-sm text-green-700">Bot ID: ' + data.bot_id + '</p></div></div>';
                     statusBadge.textContent = '✅ Working';
                     statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
                     showToast('Telegram bot connected successfully!', 'success');
@@ -764,15 +754,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 resultDiv.classList.remove('hidden');
             } catch (error) {
                 resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = \`
-                    <div class="flex items-start">
-                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
-                        <div>
-                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
-                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
-                        </div>
-                    </div>
-                \`;
+                resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i><div><p class="font-semibold text-red-800">❌ Connection Failed</p><p class="text-sm text-red-700 mt-1">' + (error.response?.data?.error || error.message) + '</p></div></div>';
                 statusBadge.textContent = '❌ Failed';
                 statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
                 resultDiv.classList.remove('hidden');
@@ -802,17 +784,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 if (response.data.success) {
                     const data = response.data.data;
                     resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = \`
-                        <div class="flex items-start">
-                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
-                            <div>
-                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
-                                <p class="text-sm text-green-700 mt-1">Test City: <strong>\${data.city}, \${data.country}</strong></p>
-                                <p class="text-sm text-green-700">Temperature: \${data.temperature}°C</p>
-                                <p class="text-sm text-green-700">Condition: \${data.description}</p>
-                            </div>
-                        </div>
-                    \`;
+                    resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i><div><p class="font-semibold text-green-800">✅ Connection Successful!</p><p class="text-sm text-green-700 mt-1">Test City: <strong>' + data.city + ', ' + data.country + '</strong></p><p class="text-sm text-green-700">Temperature: ' + data.temperature + '°C</p><p class="text-sm text-green-700">Condition: ' + data.description + '</p></div></div>';
                     statusBadge.textContent = '✅ Working';
                     statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
                     showToast('Weather API connected successfully!', 'success');
@@ -823,16 +795,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 resultDiv.classList.remove('hidden');
             } catch (error) {
                 resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = \`
-                    <div class="flex items-start">
-                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
-                        <div>
-                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
-                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
-                            <p class="text-xs text-red-600 mt-2">Get a valid key from: <a href="https://openweathermap.org/api" target="_blank" class="underline">OpenWeatherMap</a></p>
-                        </div>
-                    </div>
-                \`;
+                resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i><div><p class="font-semibold text-red-800">❌ Connection Failed</p><p class="text-sm text-red-700 mt-1">' + (error.response?.data?.error || error.message) + '</p><p class="text-xs text-red-600 mt-2">Get a valid key from: <a href="https://openweathermap.org/api" target="_blank" class="underline">OpenWeatherMap</a></p></div></div>';
                 statusBadge.textContent = '❌ Failed';
                 statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
                 resultDiv.classList.remove('hidden');
@@ -890,29 +853,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         return;
                     }
                     
-                    tbody.innerHTML = users.map(user => \`
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                \${user.email}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                \${user.name || '-'}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 rounded-full bg-\${user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray'}-100 text-\${user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray'}-800">
-                                    \${user.subscription_plan.toUpperCase()}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 rounded-full bg-\${user.subscription_status === 'active' ? 'green' : 'red'}-100 text-\${user.subscription_status === 'active' ? 'green' : 'red'}-800">
-                                    \${user.subscription_status.toUpperCase()}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                \${new Date(user.created_at).toLocaleDateString()}
-                            </td>
-                        </tr>
-                    \`).join('');
+                    tbody.innerHTML = users.map(user => '<tr><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + user.email + '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">' + (user.name || '-') + '</td><td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 py-1 rounded-full bg-' + (user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray') + '-100 text-' + (user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray') + '-800">' + user.subscription_plan.toUpperCase() + '</span></td><td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 py-1 rounded-full bg-' + (user.subscription_status === 'active' ? 'green' : 'red') + '-100 text-' + (user.subscription_status === 'active' ? 'green' : 'red') + '-800">' + user.subscription_status.toUpperCase() + '</span></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">' + new Date(user.created_at).toLocaleDateString() + '</td></tr>').join('');
                 }
             } catch (error) {
                 console.error('Failed to load users');
@@ -933,29 +874,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         return;
                     }
                     
-                    tbody.innerHTML = logs.map(log => \`
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                \${new Date(log.created_at).toLocaleString()}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 rounded-full bg-\${log.api_name === 'telegram' ? 'blue' : 'orange'}-100 text-\${log.api_name === 'telegram' ? 'blue' : 'orange'}-800">
-                                    \${log.api_name.toUpperCase()}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                \${log.action}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 rounded-full bg-\${log.success ? 'green' : 'red'}-100 text-\${log.success ? 'green' : 'red'}-800">
-                                    \${log.success ? '✅ Success' : '❌ Failed'}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
-                                \${log.success ? (log.details || 'OK') : (log.error_message || 'Error')}
-                            </td>
-                        </tr>
-                    \`).join('');
+                    tbody.innerHTML = logs.map(log => '<tr><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + new Date(log.created_at).toLocaleString() + '</td><td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 py-1 rounded-full bg-' + (log.api_name === 'telegram' ? 'blue' : 'orange') + '-100 text-' + (log.api_name === 'telegram' ? 'blue' : 'orange') + '-800">' + log.api_name.toUpperCase() + '</span></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">' + log.action + '</td><td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 py-1 rounded-full bg-' + (log.success ? 'green' : 'red') + '-100 text-' + (log.success ? 'green' : 'red') + '-800">' + (log.success ? '✅ Success' : '❌ Failed') + '</span></td><td class="px-6 py-4 text-sm text-gray-600">' + (log.success ? (log.details || 'OK') : (log.error_message || 'Error')) + '</td></tr>').join('');
                 }
             } catch (error) {
                 console.error('Failed to load logs');
@@ -1068,21 +987,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 if (response.data.success) {
                     const data = response.data.data;
                     resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = \`
-                        <div class="flex items-start">
-                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
-                            <div class="flex-1">
-                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
-                                <p class="text-sm text-green-700 mt-1">Headlines Fetched: <strong>\${data.count}</strong></p>
-                                <div class="mt-2 text-xs text-green-700">
-                                    <p class="font-semibold">Sample Headlines:</p>
-                                    <ul class="list-disc list-inside mt-1">
-                                        \${data.headlines.map(h => \`<li class="truncate">\${h}</li>\`).join('')}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    \`;
+                    resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i><div class="flex-1"><p class="font-semibold text-green-800">✅ Connection Successful!</p><p class="text-sm text-green-700 mt-1">Headlines Fetched: <strong>' + data.count + '</strong></p><div class="mt-2 text-xs text-green-700"><p class="font-semibold">Sample Headlines:</p><ul class="list-disc list-inside mt-1">' + data.headlines.map(function(h) { return '<li class="truncate">' + h + '</li>'; }).join('') + '</ul></div></div></div>';
                     statusBadge.textContent = '✅ Working';
                     statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
                     showToast('News API connected successfully!', 'success');
@@ -1093,16 +998,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 resultDiv.classList.remove('hidden');
             } catch (error) {
                 resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = \`
-                    <div class="flex items-start">
-                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
-                        <div>
-                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
-                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
-                            <p class="text-xs text-red-600 mt-2">Get a FREE key from: <a href="https://newsapi.org/register" target="_blank" class="underline">NewsAPI.org</a></p>
-                        </div>
-                    </div>
-                \`;
+                resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i><div><p class="font-semibold text-red-800">❌ Connection Failed</p><p class="text-sm text-red-700 mt-1">' + (error.response?.data?.error || error.message) + '</p><p class="text-xs text-red-600 mt-2">Get a FREE key from: <a href="https://newsapi.org/register" target="_blank" class="underline">NewsAPI.org</a></p></div></div>';
                 statusBadge.textContent = '❌ Failed';
                 statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
                 resultDiv.classList.remove('hidden');
@@ -1132,19 +1028,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 if (response.data.success) {
                     const data = response.data.data;
                     resultDiv.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = \`
-                        <div class="flex items-start">
-                            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
-                            <div class="flex-1">
-                                <p class="font-semibold text-green-800">✅ Connection Successful!</p>
-                                <p class="text-sm text-green-700 mt-1">Model: <strong>\${data.model}</strong></p>
-                                <div class="mt-2 p-2 bg-white rounded border border-green-300">
-                                    <p class="text-xs text-gray-700 font-semibold">AI Response:</p>
-                                    <p class="text-sm text-gray-800 mt-1">\${data.response}</p>
-                                </div>
-                            </div>
-                        </div>
-                    \`;
+                    resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i><div class="flex-1"><p class="font-semibold text-green-800">✅ Connection Successful!</p><p class="text-sm text-green-700 mt-1">Model: <strong>' + data.model + '</strong></p><div class="mt-2 p-2 bg-white rounded border border-green-300"><p class="text-xs text-gray-700 font-semibold">AI Response:</p><p class="text-sm text-gray-800 mt-1">' + data.response + '</p></div></div></div>';
                     statusBadge.textContent = '✅ Working';
                     statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-green-200 text-green-800';
                     showToast('Gemini AI connected successfully!', 'success');
@@ -1155,16 +1039,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 resultDiv.classList.remove('hidden');
             } catch (error) {
                 resultDiv.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = \`
-                    <div class="flex items-start">
-                        <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
-                        <div>
-                            <p class="font-semibold text-red-800">❌ Connection Failed</p>
-                            <p class="text-sm text-red-700 mt-1">\${error.response?.data?.error || error.message}</p>
-                            <p class="text-xs text-red-600 mt-2">Check your Gemini API key at: <a href="https://makersuite.google.com/app/apikey" target="_blank" class="underline">Google AI Studio</a></p>
-                        </div>
-                    </div>
-                \`;
+                resultDiv.innerHTML = '<div class="flex items-start"><i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i><div><p class="font-semibold text-red-800">❌ Connection Failed</p><p class="text-sm text-red-700 mt-1">' + (error.response?.data?.error || error.message) + '</p><p class="text-xs text-red-600 mt-2">Check your Gemini API key at: <a href="https://makersuite.google.com/app/apikey" target="_blank" class="underline">Google AI Studio</a></p></div></div>';
                 statusBadge.textContent = '❌ Failed';
                 statusBadge.className = 'px-3 py-1 rounded-full text-sm font-semibold bg-red-200 text-red-800';
                 resultDiv.classList.remove('hidden');
@@ -1251,7 +1126,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 if (response.data.success) {
                     document.getElementById('keyDisplay').textContent = response.data.licenseKey;
                     document.getElementById('generatedKey').classList.remove('hidden');
-                    showToast(\`License key generated: \${response.data.licenseKey}\`, 'success');
+                    showToast('License key generated: ' + response.data.licenseKey, 'success');
                 } else {
                     showToast('Failed to generate key', 'error');
                 }

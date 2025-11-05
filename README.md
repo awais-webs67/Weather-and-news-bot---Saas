@@ -633,6 +633,70 @@ https://openweathermap.org/api
 
 ---
 
-**Last Updated**: 2025-11-05 14:30  
-**Version**: 2.0.0 (Admin + API Testing Complete!)  
-**Status**: ✅ Production-ready (need valid Weather key)
+---
+
+## 🎉 LATEST FIXES (2025-11-05 Evening)
+
+### ✅ Admin Panel JavaScript Errors FIXED!
+**Problem**: All admin panel buttons were broken due to JavaScript syntax errors
+- Error: "Uncaught SyntaxError: Invalid regular expression: missing /"
+- Error: "testNews is not defined", "testTelegram is not defined"
+- Stats showing 0, no buttons working
+
+**Solution**: Fixed all template literal syntax issues
+- Converted 705 lines of JavaScript from template literals (`backtick strings`) to string concatenation
+- Fixed 10+ innerHTML assignments with complex template literals
+- Fixed `.map()` operations for users table, logs table, and news headlines
+- Removed all escaped quotes and backticks that were breaking syntax
+
+**Result**: 
+✅ All admin panel buttons now work perfectly
+✅ JavaScript functions properly defined
+✅ Stats display correctly
+✅ Test buttons functional (testTelegram, testNews, testWeather, testGemini)
+
+### ✅ GNews API Integration Complete!
+**New Feature**: Added GNews API support for ALL countries
+- **Free Tier**: 100 requests/day
+- **Coverage**: ALL countries including Pakistan, India, etc.
+- **Commands**: `/news Country` and `/checknews Country`
+- **Test Button**: Added in admin panel
+
+**GNews Features**:
+- Supports countries NewsAPI doesn't (like Pakistan)
+- Better country coverage than NewsAPI
+- Free API key from: https://gnews.io
+- Fallback system: GNews → NewsAPI → Error
+
+### ✅ Telegram Commands Enhanced
+**New Commands**:
+- `/checkweather City` - Check weather for any city worldwide
+- `/news Country` - Get news from specific country
+- `/checknews Country` - Alternative news command
+
+**Improved Formatting**:
+- Beautiful emoji formatting in all messages
+- Proper error messages
+- Help text with examples
+- Professional message structure
+
+### ✅ Bug Fixes
+1. **Telegram Disable Fixed** - Users no longer receive updates when disabled
+2. **Toast Messages Fixed** - Changed CSS class from `toast-${type}` to `toast ${type}`
+3. **Gemini API Fixed** - Changed endpoint from `v1/models` to `v1beta/models/gemini-2.5-flash`
+4. **NewsAPI User-Agent Fixed** - Added 'User-Agent': 'AlertFlow/1.0' header
+
+### 🔄 Pending: WhatsApp Business Cloud API
+**Status**: Ready to implement
+**Platform**: Facebook's official WhatsApp Business Cloud API
+**Requirements**: 
+- Facebook Developer account
+- WhatsApp Business verification
+- Phone number verification
+- Webhook setup
+
+---
+
+**Last Updated**: 2025-11-05 Evening  
+**Version**: 2.1.0 (Admin Panel Fixed + GNews Integrated!)  
+**Status**: ✅ Fully functional - Admin panel working perfectly!
