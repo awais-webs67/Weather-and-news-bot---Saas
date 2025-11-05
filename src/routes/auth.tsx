@@ -15,57 +15,90 @@ auth.get('/login', (c) => {
         <title>Login - WeatherNews Alert</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="/static/styles.css" rel="stylesheet">
     </head>
-    <body class="bg-gray-50">
+    <body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+        <!-- Back to Home Button -->
+        <div class="absolute top-4 left-4">
+            <a href="/" class="flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+
         <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-md w-full space-y-8">
-                <div>
-                    <div class="flex justify-center">
-                        <i class="fas fa-cloud-sun text-5xl text-purple-600"></i>
-                    </div>
-                    <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
-                        Sign in to your account
-                    </h2>
-                    <p class="mt-2 text-center text-sm text-gray-600">
-                        Or
-                        <a href="/auth/signup" class="font-medium text-purple-600 hover:text-purple-500">
-                            start your free 3-day trial
-                        </a>
-                    </p>
-                </div>
-                <form class="mt-8 space-y-6" id="loginForm">
-                    <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-3 rounded-lg text-sm"></div>
-                    <div class="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label for="email" class="sr-only">Email address</label>
-                            <input id="email" name="email" type="email" required 
-                                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
-                                placeholder="Email address">
+            <div class="max-w-md w-full">
+                <div class="glass-card">
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-4 rounded-2xl">
+                                <i class="fas fa-cloud-sun text-5xl text-white"></i>
+                            </div>
                         </div>
-                        <div>
-                            <label for="password" class="sr-only">Password</label>
-                            <input id="password" name="password" type="password" required 
-                                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" 
-                                placeholder="Password">
-                        </div>
+                        <h2 class="text-3xl font-bold gradient-text">
+                            Welcome Back
+                        </h2>
+                        <p class="mt-2 text-gray-600">
+                            Sign in to continue to your dashboard
+                        </p>
                     </div>
 
-                    <div>
-                        <button type="submit" 
-                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                            Sign in
-                        </button>
-                    </div>
-                </form>
+                    <form id="loginForm" class="space-y-6">
+                        <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <span id="errorText"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-envelope text-purple-600 mr-1"></i> Email Address
+                            </label>
+                            <input id="email" name="email" type="email" required 
+                                class="input-field" 
+                                placeholder="you@example.com">
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-lock text-purple-600 mr-1"></i> Password
+                            </label>
+                            <input id="password" name="password" type="password" required 
+                                class="input-field" 
+                                placeholder="Enter your password">
+                        </div>
+
+                        <div>
+                            <button type="submit" id="submitBtn" class="btn-primary w-full">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">
+                                Don't have an account?
+                                <a href="/auth/signup" class="font-semibold text-purple-600 hover:text-purple-800">
+                                    Start Free Trial <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/utils.js"></script>
         <script>
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const errorDiv = document.getElementById('errorMessage');
+                const errorText = document.getElementById('errorText');
+                const submitBtn = document.getElementById('submitBtn');
+                
                 errorDiv.classList.add('hidden');
+                showLoading(submitBtn);
                 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
@@ -73,11 +106,16 @@ auth.get('/login', (c) => {
                 try {
                     const response = await axios.post('/api/auth/login', { email, password });
                     if (response.data.success) {
-                        window.location.href = '/dashboard';
+                        showToast('Login successful! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1000);
                     }
                 } catch (error) {
-                    errorDiv.textContent = error.response?.data?.error || 'Login failed';
+                    hideLoading(submitBtn);
+                    errorText.textContent = error.response?.data?.error || 'Login failed. Please try again.';
                     errorDiv.classList.remove('hidden');
+                    showToast(error.response?.data?.error || 'Login failed', 'error');
                 }
             });
         </script>
@@ -97,96 +135,130 @@ auth.get('/signup', (c) => {
         <title>Sign Up - WeatherNews Alert</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="/static/styles.css" rel="stylesheet">
     </head>
-    <body class="bg-gray-50">
+    <body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+        <!-- Back to Home Button -->
+        <div class="absolute top-4 left-4">
+            <a href="/" class="flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+
         <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-md w-full space-y-8">
-                <div>
-                    <div class="flex justify-center">
-                        <i class="fas fa-cloud-sun text-5xl text-purple-600"></i>
+            <div class="max-w-md w-full">
+                <div class="glass-card">
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-4 rounded-2xl">
+                                <i class="fas fa-cloud-sun text-5xl text-white"></i>
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-bold gradient-text">
+                            Start Your Free Trial
+                        </h2>
+                        <p class="mt-2 text-gray-600">
+                            Get 3 days free access to all features
+                        </p>
+                        <div class="flex justify-center space-x-4 mt-4 text-sm text-gray-600">
+                            <span><i class="fas fa-check-circle text-green-500"></i> No Credit Card</span>
+                            <span><i class="fas fa-check-circle text-green-500"></i> Cancel Anytime</span>
+                        </div>
                     </div>
-                    <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
-                        Start your free 3-day trial
-                    </h2>
-                    <p class="mt-2 text-center text-sm text-gray-600">
-                        Already have an account?
-                        <a href="/auth/login" class="font-medium text-purple-600 hover:text-purple-500">
-                            Sign in
-                        </a>
-                    </p>
-                </div>
-                <form class="mt-8 space-y-6" id="signupForm">
-                    <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-3 rounded-lg text-sm"></div>
-                    <div id="successMessage" class="hidden bg-green-50 text-green-600 p-3 rounded-lg text-sm"></div>
-                    
-                    <div class="space-y-4">
+
+                    <form id="signupForm" class="space-y-6">
+                        <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <span id="errorText"></span>
+                            </div>
+                        </div>
+
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-user text-purple-600 mr-1"></i> Full Name
+                            </label>
                             <input id="name" name="name" type="text" required 
-                                class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" 
+                                class="input-field" 
                                 placeholder="John Doe">
                         </div>
                         
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-envelope text-purple-600 mr-1"></i> Email Address
+                            </label>
                             <input id="email" name="email" type="email" required 
-                                class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" 
+                                class="input-field" 
                                 placeholder="you@example.com">
                         </div>
                         
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-lock text-purple-600 mr-1"></i> Password
+                            </label>
                             <input id="password" name="password" type="password" required 
-                                class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" 
+                                class="input-field" 
                                 placeholder="Minimum 6 characters">
+                            <p class="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
                         </div>
-                    </div>
 
-                    <div>
-                        <button type="submit" 
-                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                            Start Free Trial
-                        </button>
-                    </div>
-                    
-                    <p class="text-xs text-center text-gray-500">
-                        No credit card required • Cancel anytime
-                    </p>
-                </form>
+                        <div>
+                            <button type="submit" id="submitBtn" class="btn-primary w-full">
+                                <i class="fas fa-rocket mr-2"></i> Start Free Trial
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600">
+                                Already have an account?
+                                <a href="/auth/login" class="font-semibold text-purple-600 hover:text-purple-800">
+                                    Sign In <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/utils.js"></script>
         <script>
             document.getElementById('signupForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const errorDiv = document.getElementById('errorMessage');
-                const successDiv = document.getElementById('successMessage');
+                const errorText = document.getElementById('errorText');
+                const submitBtn = document.getElementById('submitBtn');
+                
                 errorDiv.classList.add('hidden');
-                successDiv.classList.add('hidden');
                 
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
                 if (password.length < 6) {
-                    errorDiv.textContent = 'Password must be at least 6 characters';
+                    errorText.textContent = 'Password must be at least 6 characters';
                     errorDiv.classList.remove('hidden');
+                    showToast('Password too short', 'error');
                     return;
                 }
+                
+                showLoading(submitBtn);
                 
                 try {
                     const response = await axios.post('/api/auth/signup', { name, email, password });
                     if (response.data.success) {
-                        successDiv.textContent = 'Account created! Redirecting...';
-                        successDiv.classList.remove('hidden');
+                        showToast('Account created successfully! Redirecting...', 'success');
                         setTimeout(() => {
                             window.location.href = '/dashboard';
                         }, 1500);
                     }
                 } catch (error) {
-                    errorDiv.textContent = error.response?.data?.error || 'Signup failed';
+                    hideLoading(submitBtn);
+                    errorText.textContent = error.response?.data?.error || 'Signup failed. Please try again.';
                     errorDiv.classList.remove('hidden');
+                    showToast(error.response?.data?.error || 'Signup failed', 'error');
                 }
             });
         </script>
