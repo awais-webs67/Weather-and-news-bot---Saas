@@ -212,7 +212,7 @@ dashboard.get('/', async (c) => {
                         </label>
                         <div class="space-y-3">
                             <label class="flex items-center p-4 border-2 border-purple-300 bg-purple-50 rounded-xl cursor-pointer hover:border-purple-500 transition">
-                                <input type="radio" name="channel" value="telegram" class="mr-3 w-5 h-5" checked>
+                                <input type="radio" name="channel" value="telegram" class="mr-3 w-5 h-5" checked onchange="switchChannel('telegram')">
                                 <i class="fab fa-telegram text-3xl text-blue-500 mr-3"></i>
                                 <div class="flex-1">
                                     <span class="font-semibold text-gray-800">Telegram</span>
@@ -220,19 +220,20 @@ dashboard.get('/', async (c) => {
                                 </div>
                                 <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold">ACTIVE</span>
                             </label>
-                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-not-allowed opacity-60">
-                                <input type="radio" name="channel" value="whatsapp" class="mr-3 w-5 h-5" disabled>
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-green-500 transition">
+                                <input type="radio" name="channel" value="whatsapp" class="mr-3 w-5 h-5" onchange="switchChannel('whatsapp')">
                                 <i class="fab fa-whatsapp text-3xl text-green-500 mr-3"></i>
                                 <div class="flex-1">
                                     <span class="font-semibold text-gray-800">WhatsApp</span>
-                                    <p class="text-xs text-gray-600">Coming soon...</p>
+                                    <p class="text-xs text-gray-600">Business Cloud API</p>
                                 </div>
-                                <span class="bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded-full font-semibold">DISABLED</span>
+                                <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold">ACTIVE</span>
                             </label>
                         </div>
                     </div>
 
-                    <div id="telegramSetup">
+                    <!-- Telegram Setup -->
+                    <div id="telegramSetup" class="channel-setup">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i class="fab fa-telegram text-blue-500"></i> Telegram Username
                         </label>
@@ -269,6 +270,32 @@ dashboard.get('/', async (c) => {
                                 <li>Click "Open Bot" above and send <code class="bg-gray-200 px-1 rounded">/start</code></li>
                                 <li>Click "Connect Telegram" below to link your account</li>
                             </ol>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Setup -->
+                    <div id="whatsappSetup" class="channel-setup" style="display: none;">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fab fa-whatsapp text-green-500"></i> WhatsApp Phone Number
+                        </label>
+                        <input type="tel" id="whatsapp_phone" placeholder="+1234567890" 
+                            class="input-field">
+                        <div class="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
+                            <p class="text-xs text-gray-700 mb-2 font-semibold">
+                                <i class="fas fa-info-circle text-green-500 mr-1"></i> Setup Instructions:
+                            </p>
+                            <ol class="text-xs text-gray-600 space-y-1 ml-4 list-decimal">
+                                <li>Enter your WhatsApp phone number (with country code)</li>
+                                <li>Save your channel settings</li>
+                                <li>You'll receive a verification message on WhatsApp</li>
+                                <li>Reply to the message to activate your account</li>
+                            </ol>
+                            <div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p class="text-xs text-yellow-800">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    <strong>Note:</strong> WhatsApp integration must be enabled by admin first
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -596,23 +623,56 @@ dashboard.get('/', async (c) => {
             scheduleTimes[type][index] = newTime;
         }
 
+        function switchChannel(channel) {
+            // Hide all channel setups
+            document.getElementById('telegramSetup').style.display = 'none';
+            document.getElementById('whatsappSetup').style.display = 'none';
+            
+            // Show selected channel setup
+            if (channel === 'telegram') {
+                document.getElementById('telegramSetup').style.display = 'block';
+            } else if (channel === 'whatsapp') {
+                document.getElementById('whatsappSetup').style.display = 'block';
+            }
+        }
+
         async function saveChannel() {
-            const telegram_username = document.getElementById('telegram_username').value;
             const preferred_channel = document.querySelector('input[name="channel"]:checked').value;
             
-            if (!telegram_username) {
-                showToast('Please enter your Telegram username', 'warning');
-                return;
-            }
-            
-            try {
-                await axios.post('/api/user/preferences', {
-                    telegram_username: telegram_username.startsWith('@') ? telegram_username : '@' + telegram_username,
-                    preferred_channel
-                });
-                showToast('Channel settings saved! Now connect your Telegram account.', 'success');
-            } catch (error) {
-                showToast('Failed to save channel settings', 'error');
+            if (preferred_channel === 'telegram') {
+                const telegram_username = document.getElementById('telegram_username').value;
+                
+                if (!telegram_username) {
+                    showToast('Please enter your Telegram username', 'warning');
+                    return;
+                }
+                
+                try {
+                    await axios.post('/api/user/preferences', {
+                        telegram_username: telegram_username.startsWith('@') ? telegram_username : '@' + telegram_username,
+                        preferred_channel
+                    });
+                    showToast('Channel settings saved! Now connect your Telegram account.', 'success');
+                } catch (error) {
+                    showToast('Failed to save channel settings', 'error');
+                }
+            } else if (preferred_channel === 'whatsapp') {
+                const whatsapp_phone = document.getElementById('whatsapp_phone').value;
+                
+                if (!whatsapp_phone) {
+                    showToast('Please enter your WhatsApp phone number', 'warning');
+                    return;
+                }
+                
+                try {
+                    await axios.post('/api/user/preferences', {
+                        whatsapp_phone: whatsapp_phone,
+                        preferred_channel
+                    });
+                    showToast('WhatsApp settings saved! You will receive a verification message soon.', 'success');
+                } catch (error) {
+                    showToast('Failed to save channel settings', 'error');
+                }
             }
         }
         

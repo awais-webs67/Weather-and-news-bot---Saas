@@ -446,10 +446,14 @@ adminApi.get('/users', adminAuthMiddleware, async (c) => {
 // Add new user
 adminApi.post('/users', adminAuthMiddleware, async (c) => {
   try {
-    const { email, name, subscription_plan, subscription_status } = await c.req.json()
+    const { email, name, password, subscription_plan, subscription_status } = await c.req.json()
     
     if (!email) {
       return c.json({ error: 'Email is required' }, 400)
+    }
+    
+    if (!password) {
+      return c.json({ error: 'Password is required for new users' }, 400)
     }
     
     // Check if email already exists
@@ -461,12 +465,16 @@ adminApi.post('/users', adminAuthMiddleware, async (c) => {
       return c.json({ error: 'Email already exists' }, 400)
     }
     
+    // Hash password
+    const hashedPassword = await hashPassword(password)
+    
     // Insert new user
     const result = await c.env.DB.prepare(`
-      INSERT INTO users (email, name, subscription_plan, subscription_status, created_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO users (email, password, name, subscription_plan, subscription_status, created_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).bind(
       email,
+      hashedPassword,
       name || null,
       subscription_plan || 'free',
       subscription_status || 'active'
@@ -490,7 +498,7 @@ adminApi.post('/users', adminAuthMiddleware, async (c) => {
 adminApi.put('/users/:id', adminAuthMiddleware, async (c) => {
   try {
     const userId = c.req.param('id')
-    const { email, name, subscription_plan, subscription_status } = await c.req.json()
+    const { email, name, password, subscription_plan, subscription_status } = await c.req.json()
     
     if (!email) {
       return c.json({ error: 'Email is required' }, 400)
@@ -514,23 +522,45 @@ adminApi.put('/users/:id', adminAuthMiddleware, async (c) => {
       return c.json({ error: 'Email already exists' }, 400)
     }
     
-    // Update user
-    const result = await c.env.DB.prepare(`
-      UPDATE users 
-      SET email = ?, name = ?, subscription_plan = ?, subscription_status = ?
-      WHERE id = ?
-    `).bind(
-      email,
-      name || null,
-      subscription_plan || 'free',
-      subscription_status || 'active',
-      userId
-    ).run()
-    
-    if (result.success) {
-      return c.json({ success: true, message: 'User updated successfully' })
+    // Update user (with or without password)
+    if (password) {
+      const hashedPassword = await hashPassword(password)
+      const result = await c.env.DB.prepare(`
+        UPDATE users 
+        SET email = ?, password = ?, name = ?, subscription_plan = ?, subscription_status = ?
+        WHERE id = ?
+      `).bind(
+        email,
+        hashedPassword,
+        name || null,
+        subscription_plan || 'free',
+        subscription_status || 'active',
+        userId
+      ).run()
+      
+      if (result.success) {
+        return c.json({ success: true, message: 'User updated successfully' })
+      } else {
+        return c.json({ error: 'Failed to update user' }, 500)
+      }
     } else {
-      return c.json({ error: 'Failed to update user' }, 500)
+      const result = await c.env.DB.prepare(`
+        UPDATE users 
+        SET email = ?, name = ?, subscription_plan = ?, subscription_status = ?
+        WHERE id = ?
+      `).bind(
+        email,
+        name || null,
+        subscription_plan || 'free',
+        subscription_status || 'active',
+        userId
+      ).run()
+      
+      if (result.success) {
+        return c.json({ success: true, message: 'User updated successfully' })
+      } else {
+        return c.json({ error: 'Failed to update user' }, 500)
+      }
     }
   } catch (error: any) {
     return c.json({ error: error.message }, 500)
@@ -758,6 +788,68 @@ Provide practical, actionable suggestions that can be implemented. Be specific a
       return c.json({
         success: false,
         error: data.error?.message || 'Failed to generate suggestions'
+      }, 400)
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Test WhatsApp API
+adminApi.post('/test/whatsapp', adminAuthMiddleware, async (c) => {
+  try {
+    const { phoneNumberId, accessToken } = await c.req.json()
+    
+    if (!phoneNumberId || !accessToken) {
+      return c.json({ error: 'Phone Number ID and Access Token are required' }, 400)
+    }
+    
+    // Test WhatsApp Cloud API by getting the phone number info
+    const testUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}?access_token=${accessToken}`
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const data = await response.json()
+    
+    // Log the test
+    const logger = new APILogger(c.env.DB)
+    
+    if (response.ok && data.verified_name) {
+      await logger.log(
+        'whatsapp',
+        'test_connection',
+        true,
+        JSON.stringify({ verified_name: data.verified_name }),
+        undefined
+      )
+      
+      return c.json({
+        success: true,
+        data: {
+          verified_name: data.verified_name,
+          display_phone_number: data.display_phone_number,
+          quality_rating: data.quality_rating
+        }
+      })
+    } else {
+      const errorMsg = data.error?.message || 'Failed to connect to WhatsApp'
+      
+      await logger.log(
+        'whatsapp',
+        'test_connection',
+        false,
+        undefined,
+        errorMsg
+      )
+      
+      return c.json({
+        success: false,
+        error: errorMsg
       }, 400)
     }
   } catch (error: any) {

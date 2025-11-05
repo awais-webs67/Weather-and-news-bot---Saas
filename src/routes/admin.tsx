@@ -46,246 +46,243 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>AlertFlow Admin Panel</title>
+    <title>AlertFlow Admin - Professional Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             min-height: 100vh;
+            color: #f1f5f9;
         }
         
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
+        .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border-color: rgba(148, 163, 184, 0.2);
         }
         
         .stat-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
         
         .stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+            border-color: rgba(59, 130, 246, 0.3);
         }
         
         .api-card {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 3px solid transparent;
             transition: all 0.3s ease;
-            border-left: 4px solid transparent;
         }
         
         .api-card:hover {
-            border-left-color: #667eea;
+            border-left-color: #3b82f6;
             transform: translateX(4px);
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
         }
         
         .btn-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
         }
         
         .btn-success {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
         }
         
         .btn-success:hover {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
         }
         
-        .toast {
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
-        
-        .toast-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-        
-        .toast-error {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-        
-        .toast-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-        
-        .animate-slide-in {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        .animate-slide-out {
-            animation: slideOut 0.3s ease-in;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+        input, select, textarea {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #f1f5f9;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         
-        .nav-gradient {
-            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+        input::placeholder {
+            color: #64748b;
+        }
+        
+        table {
+            background: rgba(15, 23, 42, 0.4);
+        }
+        
+        tbody tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+        
+        .toast {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
         }
     </style>
 </head>
-<body>
-
-    <!-- Navigation -->
-    <nav class="nav-gradient shadow-2xl">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
+<body class="antialiased">
+    
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 h-16 flex items-center px-6">
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-white p-2.5 rounded-xl shadow-lg">
-                        <i class="fas fa-shield-alt text-2xl text-purple-600"></i>
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg">
+                        <i class="fas fa-bolt text-white text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-white">AlertFlow</h1>
-                        <p class="text-xs text-purple-100">Admin Control Panel</p>
+                        <h1 class="text-lg font-bold text-white">AlertFlow</h1>
+                        <p class="text-xs text-slate-400">Admin Dashboard</p>
                     </div>
                 </div>
-                
-                <div class="flex items-center space-x-4">
-                    <a href="/" class="text-white hover:text-purple-100 transition">
-                        <i class="fas fa-home mr-2"></i>Home
-                    </a>
-                    <button onclick="logout()" class="text-white hover:text-purple-100 transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </button>
-                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button onclick="refreshStats()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+                <button onclick="logout()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Main Content -->
+    <div class="pt-20 px-6 pb-8 max-w-7xl mx-auto">
         
-        <!-- Page Header -->
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
-                <p class="text-purple-100">Monitor and manage your system</p>
-            </div>
-            <button onclick="refreshStats()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
-                <i class="fas fa-sync-alt mr-2"></i>Refresh
-            </button>
-        </div>
-
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="stat-card glass-effect rounded-2xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 font-semibold mb-1">Total Users</p>
-                        <p class="text-4xl font-bold text-gray-900" id="totalUsers">0</p>
+            <!-- Total Users -->
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-blue-500/20 p-3 rounded-lg">
+                        <i class="fas fa-users text-2xl text-blue-400"></i>
                     </div>
-                    <div class="bg-gradient-to-br from-blue-400 to-blue-600 p-4 rounded-2xl">
-                        <i class="fas fa-users text-3xl text-white"></i>
-                    </div>
+                    <i class="fas fa-arrow-up text-green-400 text-sm"></i>
                 </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="totalUsers">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Total Users</p>
             </div>
 
-            <div class="stat-card glass-effect rounded-2xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 font-semibold mb-1">Active Trials</p>
-                        <p class="text-4xl font-bold text-gray-900" id="activeTrials">0</p>
+            <!-- Active Trials -->
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-yellow-500/20 p-3 rounded-lg">
+                        <i class="fas fa-clock text-2xl text-yellow-400"></i>
                     </div>
-                    <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 p-4 rounded-2xl">
-                        <i class="fas fa-clock text-3xl text-white"></i>
-                    </div>
+                    <i class="fas fa-minus text-slate-400 text-sm"></i>
                 </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="activeTrials">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Active Trials</p>
             </div>
 
-            <div class="stat-card glass-effect rounded-2xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 font-semibold mb-1">Premium Users</p>
-                        <p class="text-4xl font-bold text-gray-900" id="premiumUsers">0</p>
+            <!-- Premium Users -->
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-500/20 p-3 rounded-lg">
+                        <i class="fas fa-crown text-2xl text-purple-400"></i>
                     </div>
-                    <div class="bg-gradient-to-br from-green-400 to-green-600 p-4 rounded-2xl">
-                        <i class="fas fa-crown text-3xl text-white"></i>
-                    </div>
+                    <i class="fas fa-arrow-up text-green-400 text-sm"></i>
                 </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="premiumUsers">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Premium Users</p>
             </div>
 
-            <div class="stat-card glass-effect rounded-2xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 font-semibold mb-1">Messages Today</p>
-                        <p class="text-4xl font-bold text-gray-900" id="messagesToday">0</p>
+            <!-- Messages Today -->
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-500/20 p-3 rounded-lg">
+                        <i class="fas fa-paper-plane text-2xl text-green-400"></i>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-400 to-purple-600 p-4 rounded-2xl">
-                        <i class="fas fa-envelope text-3xl text-white"></i>
-                    </div>
+                    <i class="fas fa-arrow-up text-green-400 text-sm"></i>
                 </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="messagesToday">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Messages Today</p>
             </div>
         </div>
 
-        <!-- API Configuration -->
-        <div class="glass-effect rounded-2xl p-8 mb-8">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6">
-                <i class="fas fa-cogs text-purple-600 mr-3"></i>API Configuration
-            </h3>
-
+        <!-- API Configuration Section -->
+        <div class="card rounded-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-plug text-blue-400 mr-3"></i>API Configuration
+            </h2>
+            
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
-                <!-- Telegram -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-blue-100 p-3 rounded-lg">
-                                <i class="fab fa-telegram text-2xl text-blue-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">Telegram Bot</h4>
-                                <p class="text-xs text-gray-500">Messaging service</p>
-                            </div>
+                <!-- Telegram Bot -->
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-blue-500/20 p-2.5 rounded-lg">
+                            <i class="fab fa-telegram text-xl text-blue-400"></i>
                         </div>
-                        <span id="telegramStatus" class="text-sm text-gray-500">Not tested</span>
+                        <div>
+                            <h4 class="text-base font-bold text-white">Telegram Bot</h4>
+                            <p class="text-xs text-slate-400">Bot API Token</p>
+                        </div>
                     </div>
                     
-                    <input type="password" id="telegram_bot_token" placeholder="Bot token" 
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-3 text-sm">
-                    
-                    <div class="flex items-center mb-3">
-                        <input type="checkbox" id="telegramEnabled" onchange="toggleTelegram(this.checked)" class="w-4 h-4 mr-2">
-                        <label class="text-sm text-gray-700">Enable Telegram</label>
-                    </div>
+                    <input type="text" id="telegram_bot_token" placeholder="Enter bot token" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
                         <button onclick="testTelegram()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
@@ -297,23 +294,20 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     </div>
                 </div>
 
-                <!-- Weather -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-orange-100 p-3 rounded-lg">
-                                <i class="fas fa-cloud-sun text-2xl text-orange-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">Weather API</h4>
-                                <p class="text-xs text-gray-500">OpenWeatherMap</p>
-                            </div>
+                <!-- Weather API -->
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-orange-500/20 p-2.5 rounded-lg">
+                            <i class="fas fa-cloud-sun text-xl text-orange-400"></i>
                         </div>
-                        <span id="weatherStatus" class="text-sm text-gray-500">Not tested</span>
+                        <div>
+                            <h4 class="text-base font-bold text-white">Weather API</h4>
+                            <p class="text-xs text-slate-400">OpenWeatherMap Key</p>
+                        </div>
                     </div>
                     
-                    <input type="password" id="weather_api_key" placeholder="API key" 
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-3 text-sm">
+                    <input type="text" id="weather_api_key" placeholder="Enter API key" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
                         <button onclick="testWeather()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
@@ -326,22 +320,19 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 </div>
 
                 <!-- News API -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-red-100 p-3 rounded-lg">
-                                <i class="fas fa-newspaper text-2xl text-red-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">News API</h4>
-                                <p class="text-xs text-gray-500">NewsAPI.org</p>
-                            </div>
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-red-500/20 p-2.5 rounded-lg">
+                            <i class="fas fa-newspaper text-xl text-red-400"></i>
                         </div>
-                        <span id="newsStatus" class="text-sm text-gray-500">Not tested</span>
+                        <div>
+                            <h4 class="text-base font-bold text-white">News API</h4>
+                            <p class="text-xs text-slate-400">NewsAPI.org Key</p>
+                        </div>
                     </div>
                     
-                    <input type="password" id="news_api_key" placeholder="API key" 
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-3 text-sm">
+                    <input type="text" id="news_api_key" placeholder="Enter API key" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
                         <button onclick="testNews()" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
@@ -353,26 +344,23 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     </div>
                 </div>
 
-                <!-- GNews -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-indigo-100 p-3 rounded-lg">
-                                <i class="fas fa-globe text-2xl text-indigo-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">GNews API</h4>
-                                <p class="text-xs text-gray-500">GNews.io</p>
-                            </div>
+                <!-- GNews API -->
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-pink-500/20 p-2.5 rounded-lg">
+                            <i class="fas fa-globe text-xl text-pink-400"></i>
                         </div>
-                        <span id="gnewsStatus" class="text-sm text-gray-500">Not tested</span>
+                        <div>
+                            <h4 class="text-base font-bold text-white">GNews API</h4>
+                            <p class="text-xs text-slate-400">GNews.io Key</p>
+                        </div>
                     </div>
                     
-                    <input type="password" id="gnews_api_key" placeholder="API key" 
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-3 text-sm">
+                    <input type="text" id="gnews_api_key" placeholder="Enter API key" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
-                        <button onclick="testGNews()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+                        <button onclick="testGNews()" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
                             <i class="fas fa-vial mr-2"></i>Test
                         </button>
                         <button onclick="saveGNewsKey()" class="btn-success text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
@@ -382,22 +370,19 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 </div>
 
                 <!-- Gemini AI -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm lg:col-span-2">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-purple-100 p-3 rounded-lg">
-                                <i class="fas fa-robot text-2xl text-purple-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">Gemini AI</h4>
-                                <p class="text-xs text-gray-500">Google AI</p>
-                            </div>
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-purple-500/20 p-2.5 rounded-lg">
+                            <i class="fas fa-brain text-xl text-purple-400"></i>
                         </div>
-                        <span id="geminiStatus" class="text-sm text-gray-500">Not tested</span>
+                        <div>
+                            <h4 class="text-base font-bold text-white">Gemini AI</h4>
+                            <p class="text-xs text-slate-400">Google AI Key</p>
+                        </div>
                     </div>
                     
-                    <input type="password" id="gemini_api_key" placeholder="API key" 
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-3 text-sm">
+                    <input type="text" id="gemini_api_key" placeholder="Enter API key" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
                         <button onclick="testGemini()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
@@ -409,21 +394,40 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     </div>
                 </div>
 
-                <!-- WhatsApp Toggle -->
-                <div class="api-card bg-white rounded-xl p-6 shadow-sm lg:col-span-2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-green-100 p-3 rounded-lg">
-                                <i class="fab fa-whatsapp text-2xl text-green-600"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-gray-900">WhatsApp Integration</h4>
-                                <p class="text-xs text-gray-500">Enable or disable WhatsApp messaging</p>
-                            </div>
+                <!-- WhatsApp Cloud API -->
+                <div class="api-card rounded-lg p-5">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-green-500/20 p-2.5 rounded-lg">
+                            <i class="fab fa-whatsapp text-xl text-green-400"></i>
                         </div>
+                        <div>
+                            <h4 class="text-base font-bold text-white">WhatsApp Business</h4>
+                            <p class="text-xs text-slate-400">Meta Cloud API</p>
+                        </div>
+                    </div>
+                    
+                    <input type="text" id="whatsapp_phone_number_id" placeholder="Phone Number ID" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-2 text-sm">
+                    <input type="text" id="whatsapp_business_account_id" placeholder="Business Account ID" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-2 text-sm">
+                    <input type="text" id="whatsapp_access_token" placeholder="Access Token" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
+
+                    <div class="flex space-x-2 mb-3">
+                        <button onclick="testWhatsApp()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+                            <i class="fas fa-vial mr-2"></i>Test
+                        </button>
+                        <button onclick="saveWhatsAppSettings()" class="btn-success text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+                            <i class="fas fa-save mr-2"></i>Save
+                        </button>
+                    </div>
+
+                    <!-- Enable/Disable Toggle -->
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                        <span class="text-sm text-slate-300 font-medium">Enable WhatsApp</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="whatsappEnabled" onchange="toggleWhatsApp(this.checked)" class="sr-only peer">
-                            <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                         </label>
                     </div>
                 </div>
@@ -431,48 +435,73 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
         </div>
 
-        <!-- Users Management -->
-        <div class="glass-effect rounded-2xl p-8 mb-8">
+        <!-- License Key Management -->
+        <div class="card rounded-xl p-8 mb-8">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">
-                    <i class="fas fa-users text-blue-600 mr-3"></i>User Management
-                </h3>
-                <div class="flex space-x-3">
-                    <button onclick="showAddUserModal()" class="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg">
-                        <i class="fas fa-plus mr-2"></i>Add User
-                    </button>
-                    <button onclick="loadUsers()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition">
-                        <i class="fas fa-sync-alt mr-2"></i>Refresh
-                    </button>
-                </div>
+                <h2 class="text-2xl font-bold text-white">
+                    <i class="fas fa-key text-yellow-400 mr-3"></i>License Key Management
+                </h2>
+                <button onclick="showGenerateLicenseModal()" class="btn-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold">
+                    <i class="fas fa-plus mr-2"></i>Generate New Key
+                </button>
             </div>
             
             <div class="overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
-                        <tr class="border-b-2 border-gray-200">
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Plan</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Joined</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                        <tr class="border-b border-slate-700">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">License Key</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Plan</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Duration</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Used By</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Created</th>
                         </tr>
                     </thead>
-                    <tbody id="usersTableBody" class="divide-y divide-gray-100">
-                        <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Loading users...</td></tr>
+                    <tbody id="licenseKeysTableBody" class="divide-y divide-slate-700/50">
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Loading license keys...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="card rounded-xl p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">
+                    <i class="fas fa-users text-blue-400 mr-3"></i>User Management
+                </h2>
+                <button onclick="showAddUserModal()" class="btn-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold">
+                    <i class="fas fa-plus mr-2"></i>Add User
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Plan</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-slate-700/50">
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Loading users...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <!-- API Logs -->
-        <div class="glass-effect rounded-2xl p-8">
+        <div class="card rounded-xl p-8">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">
-                    <i class="fas fa-list-alt text-purple-600 mr-3"></i>API Activity Logs
-                </h3>
-                <button onclick="loadLogs()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                <h2 class="text-2xl font-bold text-white">
+                    <i class="fas fa-list-alt text-purple-400 mr-3"></i>API Activity Logs
+                </h2>
+                <button onclick="loadLogs()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">
                     <i class="fas fa-sync-alt mr-2"></i>Refresh
                 </button>
             </div>
@@ -480,16 +509,16 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             <div class="overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
-                        <tr class="border-b-2 border-gray-200">
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Timestamp</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">API</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Action</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Details</th>
+                        <tr class="border-b border-slate-700">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">API</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Action</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Details</th>
                         </tr>
                     </thead>
-                    <tbody id="logsTableBody" class="divide-y divide-gray-100">
-                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Loading logs...</td></tr>
+                    <tbody id="logsTableBody" class="divide-y divide-slate-700/50">
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Loading logs...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -500,26 +529,33 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
     <!-- User Modal -->
     <div id="userModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
         <div class="modal-backdrop absolute inset-0" onclick="closeUserModal()"></div>
-        <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 relative z-10 shadow-2xl">
-            <h3 id="userModalTitle" class="text-2xl font-bold text-gray-900 mb-6">Add User</h3>
+        <div class="card rounded-xl p-8 max-w-md w-full mx-4 relative z-10 shadow-2xl">
+            <h3 id="userModalTitle" class="text-2xl font-bold text-white mb-6">Add User</h3>
             
             <form id="userForm" onsubmit="event.preventDefault(); saveUser();">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Email *</label>
                         <input type="email" id="userEmail" required 
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm">
+                            class="w-full px-4 py-2.5 rounded-lg text-sm">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Name</label>
                         <input type="text" id="userName" 
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm">
+                            class="w-full px-4 py-2.5 rounded-lg text-sm">
+                    </div>
+                    
+                    <div id="userPasswordGroup">
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Password *</label>
+                        <input type="password" id="userPassword" 
+                            class="w-full px-4 py-2.5 rounded-lg text-sm"
+                            placeholder="Enter password">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Subscription Plan</label>
-                        <select id="userPlan" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm">
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Subscription Plan</label>
+                        <select id="userPlan" class="w-full px-4 py-2.5 rounded-lg text-sm">
                             <option value="free">Free</option>
                             <option value="trial">Trial</option>
                             <option value="premium">Premium</option>
@@ -527,8 +563,8 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                        <select id="userStatus" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-sm">
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Status</label>
+                        <select id="userStatus" class="w-full px-4 py-2.5 rounded-lg text-sm">
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                             <option value="suspended">Suspended</option>
@@ -537,10 +573,10 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 </div>
                 
                 <div class="flex space-x-3 mt-6">
-                    <button type="submit" class="flex-1 btn-primary text-white px-6 py-3 rounded-xl font-semibold">
+                    <button type="submit" class="flex-1 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
                         <i class="fas fa-save mr-2"></i>Save
                     </button>
-                    <button type="button" onclick="closeUserModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold transition">
+                    <button type="button" onclick="closeUserModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition">
                         Cancel
                     </button>
                 </div>
@@ -548,8 +584,59 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         </div>
     </div>
 
+    <!-- License Key Generation Modal -->
+    <div id="licenseModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="modal-backdrop absolute inset-0" onclick="closeLicenseModal()"></div>
+        <div class="card rounded-xl p-8 max-w-md w-full mx-4 relative z-10 shadow-2xl">
+            <h3 class="text-2xl font-bold text-white mb-6">Generate License Key</h3>
+            
+            <form onsubmit="event.preventDefault(); generateLicenseKey();">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Plan Type</label>
+                        <select id="licensePlanType" class="w-full px-4 py-2.5 rounded-lg text-sm">
+                            <option value="trial">Trial (3 days)</option>
+                            <option value="monthly">Monthly Premium</option>
+                            <option value="yearly">Yearly Premium</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Duration (Days)</label>
+                        <input type="number" id="licenseDuration" 
+                            class="w-full px-4 py-2.5 rounded-lg text-sm"
+                            placeholder="e.g., 30, 90, 365"
+                            value="30"
+                            min="1"
+                            required>
+                    </div>
+
+                    <!-- Generated Key Display -->
+                    <div id="generatedKeyDisplay" class="hidden mt-4 p-4 bg-slate-900 rounded-lg border border-green-500">
+                        <p class="text-xs text-slate-400 mb-2">Generated License Key:</p>
+                        <div class="flex items-center space-x-2">
+                            <code id="generatedKey" class="flex-1 text-sm text-green-400 font-mono break-all"></code>
+                            <button type="button" onclick="copyLicenseKey()" class="text-green-400 hover:text-green-300">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 mt-6">
+                    <button type="submit" class="flex-1 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                        <i class="fas fa-key mr-2"></i>Generate
+                    </button>
+                    <button type="button" onclick="closeLicenseModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+                        Close
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-    <script src="/static/admin-v4.js?v=4.0"></script>
+    <script src="/static/admin-v5.js?v=5.0"></script>
 </body>
 </html>
   `)
