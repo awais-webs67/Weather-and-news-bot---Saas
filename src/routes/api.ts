@@ -329,10 +329,10 @@ api.get('/telegram/get-chat-id', authMiddleware, async (c) => {
     
     // Get Telegram bot token from settings
     const settings = await c.env.DB.prepare(
-      'SELECT telegram_bot_token FROM api_settings WHERE id = 1'
+      "SELECT setting_value FROM api_settings WHERE setting_key = 'telegram_bot_token'"
     ).first()
     
-    if (!settings || !settings.telegram_bot_token) {
+    if (!settings || !settings.setting_value) {
       return c.json({ 
         success: false, 
         error: 'Telegram bot not configured. Please contact admin.' 
@@ -341,7 +341,7 @@ api.get('/telegram/get-chat-id', authMiddleware, async (c) => {
     
     // Import TelegramBot class
     const { TelegramBot } = await import('../lib/integrations')
-    const bot = new TelegramBot(settings.telegram_bot_token as string)
+    const bot = new TelegramBot(settings.setting_value as string)
     
     // Get recent updates
     const result = await bot.getUpdates()
@@ -416,10 +416,10 @@ api.post('/user/test-notification', authMiddleware, async (c) => {
     
     // Get Telegram bot token from settings
     const settings = await c.env.DB.prepare(
-      'SELECT telegram_bot_token FROM api_settings WHERE id = 1'
+      "SELECT setting_value FROM api_settings WHERE setting_key = 'telegram_bot_token'"
     ).first()
     
-    if (!settings || !settings.telegram_bot_token) {
+    if (!settings || !settings.setting_value) {
       return c.json({ 
         success: false, 
         error: 'Telegram bot not configured. Please contact admin.' 
@@ -437,7 +437,7 @@ api.post('/user/test-notification', authMiddleware, async (c) => {
     
     // Import TelegramBot class
     const { TelegramBot } = await import('../lib/integrations')
-    const bot = new TelegramBot(settings.telegram_bot_token as string)
+    const bot = new TelegramBot(settings.setting_value as string)
     
     // Create test message
     const testMessage = `
