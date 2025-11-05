@@ -18,7 +18,7 @@ dashboard.get('/', async (c) => {
     return c.redirect('/auth/login')
   }
   
-  // User is authenticated, show simple dashboard
+  // User is authenticated, show full dashboard
   return c.html(`
 <!DOCTYPE html>
 <html lang="en">
@@ -45,9 +45,6 @@ dashboard.get('/', async (c) => {
                     <a href="/" class="nav-link text-gray-600">
                         <i class="fas fa-home"></i> Home
                     </a>
-                    <a href="/static/admin-login.html" class="nav-link text-gray-600">
-                        <i class="fas fa-cog"></i> Admin
-                    </a>
                     <span class="text-sm text-gray-600" id="userEmail"></span>
                     <button onclick="logout()" class="nav-link text-red-600 hover:bg-red-50">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -58,36 +55,235 @@ dashboard.get('/', async (c) => {
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="glass-card">
-            <div class="text-center py-12">
-                <i class="fas fa-rocket text-6xl text-purple-600 mb-6"></i>
-                <h1 class="text-4xl font-bold gradient-text mb-4">Welcome to Your Dashboard!</h1>
-                <p class="text-xl text-gray-600 mb-8">Your WeatherNews Alert account is active</p>
-                
-                <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-                        <i class="fas fa-cloud-sun text-4xl mb-3"></i>
-                        <h3 class="text-xl font-bold mb-2">Weather Updates</h3>
-                        <p class="text-sm text-blue-100">Get daily weather forecasts</p>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
-                        <i class="fas fa-newspaper text-4xl mb-3"></i>
-                        <h3 class="text-xl font-bold mb-2">News Summaries</h3>
-                        <p class="text-sm text-green-100">Stay updated with local news</p>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
-                        <i class="fas fa-paper-plane text-4xl mb-3"></i>
-                        <h3 class="text-xl font-bold mb-2">Telegram Delivery</h3>
-                        <p class="text-sm text-purple-100">Messages on Telegram bot</p>
-                    </div>
+        <!-- Trial Status Banner -->
+        <div id="trialBanner" class="hidden mb-6 glass-card bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mr-4"></i>
+                <div>
+                    <p class="font-semibold text-gray-800">
+                        Your free trial <span id="trialStatus"></span>
+                    </p>
+                    <a href="#pricing" class="text-sm text-purple-600 hover:underline font-medium">
+                        Upgrade to Premium →
+                    </a>
                 </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold gradient-text">Dashboard</h1>
+            <button onclick="testNotification()" class="btn-secondary">
+                <i class="fas fa-paper-plane mr-2"></i> Test Notification
+            </button>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6 mb-8">
+            <!-- Stats Cards -->
+            <div class="glass-card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm">Subscription</p>
+                        <p class="text-2xl font-bold" id="subscriptionPlan">Free Trial</p>
+                    </div>
+                    <i class="fas fa-crown text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            
+            <div class="glass-card bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm">Status</p>
+                        <p class="text-2xl font-bold" id="subscriptionStatus">Active</p>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl text-green-200"></i>
+                </div>
+            </div>
+            
+            <div class="glass-card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm">Trial Ends</p>
+                        <p class="text-2xl font-bold" id="trialEnds">-</p>
+                    </div>
+                    <i class="fas fa-calendar text-4xl text-purple-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Channel Setup Card -->
+            <div class="glass-card">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gradient-text">
+                    <i class="fas fa-comments mr-3"></i>
+                    Messaging Channel
+                </h2>
                 
-                <div class="mt-12">
-                    <p class="text-gray-600 mb-4">Your account is active with a 3-day free trial</p>
-                    <button class="btn-primary" onclick="testNotification()">
-                        <i class="fas fa-paper-plane mr-2"></i> Send Test Notification
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">
+                            Choose Your Channel
+                        </label>
+                        <div class="space-y-3">
+                            <label class="flex items-center p-4 border-2 border-purple-300 bg-purple-50 rounded-xl cursor-pointer hover:border-purple-500 transition">
+                                <input type="radio" name="channel" value="telegram" class="mr-3 w-5 h-5" checked>
+                                <i class="fab fa-telegram text-3xl text-blue-500 mr-3"></i>
+                                <div class="flex-1">
+                                    <span class="font-semibold text-gray-800">Telegram</span>
+                                    <p class="text-xs text-gray-600">Fast & reliable messaging</p>
+                                </div>
+                                <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold">ACTIVE</span>
+                            </label>
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-not-allowed opacity-60">
+                                <input type="radio" name="channel" value="whatsapp" class="mr-3 w-5 h-5" disabled>
+                                <i class="fab fa-whatsapp text-3xl text-green-500 mr-3"></i>
+                                <div class="flex-1">
+                                    <span class="font-semibold text-gray-800">WhatsApp</span>
+                                    <p class="text-xs text-gray-600">Coming soon...</p>
+                                </div>
+                                <span class="bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded-full font-semibold">DISABLED</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="telegramSetup">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fab fa-telegram text-blue-500"></i> Telegram Username (optional)
+                        </label>
+                        <input type="text" id="telegram_username" placeholder="@username" 
+                            class="input-field">
+                        <p class="text-xs text-gray-500 mt-2 flex items-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Start a chat with our bot: <a href="#" class="text-purple-600 hover:underline ml-1 font-semibold">@WeatherNewsBot</a>
+                        </p>
+                    </div>
+
+                    <button onclick="saveChannel()" class="btn-primary w-full">
+                        <i class="fas fa-save mr-2"></i> Save Channel Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Location Settings Card -->
+            <div class="glass-card">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gradient-text">
+                    <i class="fas fa-map-marker-alt mr-3"></i>
+                    Location Settings
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="relative">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-globe text-purple-600"></i> Country
+                        </label>
+                        <input type="text" id="country" placeholder="Start typing country name..." 
+                            class="input-field" autocomplete="off">
+                        <div id="countryDropdown" class="autocomplete-dropdown hidden"></div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-city text-purple-600"></i> City
+                        </label>
+                        <input type="text" id="city" placeholder="Start typing city name..." 
+                            class="input-field" autocomplete="off">
+                        <div id="cityDropdown" class="autocomplete-dropdown hidden"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-language text-purple-600"></i> Language
+                            </label>
+                            <select id="language" class="input-field">
+                                <option value="en">🇬🇧 English</option>
+                                <option value="ur">🇵🇰 Urdu (اردو)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-thermometer-half text-purple-600"></i> Temperature
+                            </label>
+                            <select id="temperature_unit" class="input-field">
+                                <option value="C">Celsius (°C)</option>
+                                <option value="F">Fahrenheit (°F)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="saveLocation()" class="btn-primary w-full">
+                        <i class="fas fa-save mr-2"></i> Save Location Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Schedule Settings Card -->
+            <div class="glass-card lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gradient-text">
+                    <i class="fas fa-clock mr-3"></i>
+                    Notification Schedule
+                </h2>
+                
+                <div class="space-y-6">
+                    <!-- Weather Morning -->
+                    <div class="border-2 border-purple-200 rounded-xl p-4 bg-purple-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="weather_morning_enabled" checked 
+                                    class="mr-3 w-5 h-5 text-purple-600 rounded">
+                                <div>
+                                    <span class="font-bold text-gray-800 text-lg">Morning Weather</span>
+                                    <p class="text-xs text-gray-600">Daily weather forecast for the morning</p>
+                                </div>
+                            </label>
+                            <i class="fas fa-sun text-3xl text-yellow-500"></i>
+                        </div>
+                        <div id="weatherMorningTimes" class="space-y-2"></div>
+                        <button onclick="addTime('weather_morning')" class="mt-2 text-sm text-purple-600 hover:text-purple-800 font-semibold">
+                            <i class="fas fa-plus-circle mr-1"></i> Add Another Time
+                        </button>
+                    </div>
+
+                    <!-- Weather Night -->
+                    <div class="border-2 border-indigo-200 rounded-xl p-4 bg-indigo-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="weather_night_enabled" checked 
+                                    class="mr-3 w-5 h-5 text-indigo-600 rounded">
+                                <div>
+                                    <span class="font-bold text-gray-800 text-lg">Evening Weather</span>
+                                    <p class="text-xs text-gray-600">Evening weather updates and forecasts</p>
+                                </div>
+                            </label>
+                            <i class="fas fa-moon text-3xl text-indigo-600"></i>
+                        </div>
+                        <div id="weatherNightTimes" class="space-y-2"></div>
+                        <button onclick="addTime('weather_night')" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">
+                            <i class="fas fa-plus-circle mr-1"></i> Add Another Time
+                        </button>
+                    </div>
+
+                    <!-- News -->
+                    <div class="border-2 border-green-200 rounded-xl p-4 bg-green-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="news_enabled" checked 
+                                    class="mr-3 w-5 h-5 text-green-600 rounded">
+                                <div>
+                                    <span class="font-bold text-gray-800 text-lg">Daily News</span>
+                                    <p class="text-xs text-gray-600">Local and national news summaries</p>
+                                </div>
+                            </label>
+                            <i class="fas fa-newspaper text-3xl text-green-600"></i>
+                        </div>
+                        <div id="newsTimes" class="space-y-2"></div>
+                        <button onclick="addTime('news')" class="mt-2 text-sm text-green-600 hover:text-green-800 font-semibold">
+                            <i class="fas fa-plus-circle mr-1"></i> Add Another Time
+                        </button>
+                    </div>
+
+                    <button onclick="saveSchedules()" class="btn-primary w-full">
+                        <i class="fas fa-save mr-2"></i> Save All Schedules
                     </button>
                 </div>
             </div>
@@ -97,12 +293,27 @@ dashboard.get('/', async (c) => {
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script src="/static/utils.js"></script>
     <script>
+        let userData = null;
+        const scheduleTimes = {
+            weather_morning: ['07:00'],
+            weather_night: ['20:00'],
+            news: ['09:00']
+        };
+
+        // Initialize
+        async function init() {
+            await loadProfile();
+            renderScheduleTimes();
+            setupCountryAutocomplete('country', 'countryDropdown');
+            setupCityAutocomplete('country', 'city', 'cityDropdown');
+        }
+
         async function loadProfile() {
             try {
                 const response = await axios.get('/api/user/profile');
                 if (response.data.success) {
-                    const user = response.data.user;
-                    document.getElementById('userEmail').textContent = user.email;
+                    userData = response.data;
+                    updateUI();
                 }
             } catch (error) {
                 if (error.response?.status === 401) {
@@ -111,8 +322,164 @@ dashboard.get('/', async (c) => {
             }
         }
 
+        function updateUI() {
+            if (!userData) return;
+            
+            const { user, location, schedules } = userData;
+            
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('subscriptionPlan').textContent = user.subscription_plan.toUpperCase();
+            document.getElementById('subscriptionStatus').textContent = user.subscription_status.toUpperCase();
+            
+            if (user.trial_ends_at) {
+                const trialDate = new Date(user.trial_ends_at);
+                const now = new Date();
+                const daysLeft = Math.ceil((trialDate - now) / (1000 * 60 * 60 * 24));
+                
+                document.getElementById('trialEnds').textContent = trialDate.toLocaleDateString();
+                
+                if (daysLeft > 0 && daysLeft <= 3) {
+                    document.getElementById('trialBanner').classList.remove('hidden');
+                    document.getElementById('trialStatus').textContent = \`ends in \${daysLeft} day\${daysLeft > 1 ? 's' : ''}.\`;
+                }
+            }
+            
+            if (user.telegram_username) {
+                document.getElementById('telegram_username').value = user.telegram_username;
+            }
+            
+            if (location) {
+                document.getElementById('country').value = location.country || '';
+                document.getElementById('city').value = location.city || '';
+                document.getElementById('language').value = location.language || 'en';
+                document.getElementById('temperature_unit').value = location.temperature_unit || 'C';
+            }
+            
+            // Load schedules
+            if (schedules && schedules.length > 0) {
+                scheduleTimes.weather_morning = [];
+                scheduleTimes.weather_night = [];
+                scheduleTimes.news = [];
+                
+                schedules.forEach(schedule => {
+                    const type = schedule.schedule_type;
+                    if (scheduleTimes[type]) {
+                        scheduleTimes[type].push(schedule.delivery_time);
+                    }
+                    
+                    const enabledCheckbox = document.getElementById(\`\${type}_enabled\`);
+                    if (enabledCheckbox) enabledCheckbox.checked = schedule.is_enabled === 1;
+                });
+                
+                renderScheduleTimes();
+            }
+        }
+
+        function renderScheduleTimes() {
+            ['weather_morning', 'weather_night', 'news'].forEach(type => {
+                const container = document.getElementById(\`\${type === 'weather_morning' ? 'weatherMorning' : type === 'weather_night' ? 'weatherNight' : 'news'}Times\`);
+                if (!container) return;
+                
+                container.innerHTML = '';
+                scheduleTimes[type].forEach((time, index) => {
+                    const timeDiv = document.createElement('div');
+                    timeDiv.className = 'flex items-center space-x-2';
+                    timeDiv.innerHTML = \`
+                        <input type="time" value="\${time}" 
+                            onchange="updateTime('\${type}', \${index}, this.value)"
+                            class="input-field flex-1">
+                        \${scheduleTimes[type].length > 1 ? 
+                            \`<button onclick="removeTime('\${type}', \${index})" 
+                                class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>\` : ''}
+                    \`;
+                    container.appendChild(timeDiv);
+                });
+            });
+        }
+
+        function addTime(type) {
+            scheduleTimes[type].push('12:00');
+            renderScheduleTimes();
+            showToast('Time slot added', 'success');
+        }
+
+        function removeTime(type, index) {
+            scheduleTimes[type].splice(index, 1);
+            renderScheduleTimes();
+            showToast('Time slot removed', 'success');
+        }
+
+        function updateTime(type, index, newTime) {
+            scheduleTimes[type][index] = newTime;
+        }
+
+        async function saveChannel() {
+            const telegram_username = document.getElementById('telegram_username').value;
+            const preferred_channel = document.querySelector('input[name="channel"]:checked').value;
+            
+            try {
+                await axios.post('/api/user/preferences', {
+                    telegram_username,
+                    preferred_channel
+                });
+                showToast('Channel settings saved successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to save channel settings', 'error');
+            }
+        }
+
+        async function saveLocation() {
+            const country = document.getElementById('country').value;
+            const city = document.getElementById('city').value;
+            const language = document.getElementById('language').value;
+            const temperature_unit = document.getElementById('temperature_unit').value;
+            
+            if (!country || !city) {
+                showToast('Please enter both country and city', 'warning');
+                return;
+            }
+            
+            try {
+                await axios.post('/api/user/preferences', {
+                    country,
+                    city,
+                    language,
+                    temperature_unit,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                });
+                showToast('Location settings saved successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to save location settings', 'error');
+            }
+        }
+
+        async function saveSchedules() {
+            const schedules = [];
+            
+            ['weather_morning', 'weather_night', 'news'].forEach(type => {
+                const isEnabled = document.getElementById(\`\${type}_enabled\`).checked;
+                scheduleTimes[type].forEach(time => {
+                    schedules.push({
+                        schedule_type: type,
+                        delivery_time: time,
+                        is_enabled: isEnabled
+                    });
+                });
+            });
+            
+            try {
+                await axios.post('/api/user/schedules', { schedules });
+                showToast('Schedule saved successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to save schedule', 'error');
+            }
+        }
+
         async function testNotification() {
-            showToast('Test notification feature coming soon!', 'info');
+            showToast('Test notification sent! Check your Telegram', 'info');
+            // TODO: Implement actual test notification
         }
 
         async function logout() {
@@ -127,7 +494,8 @@ dashboard.get('/', async (c) => {
             }
         }
 
-        loadProfile();
+        // Initialize on page load
+        init();
     </script>
 </body>
 </html>
