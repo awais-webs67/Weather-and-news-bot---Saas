@@ -211,7 +211,25 @@ Smart weather & news automation delivered right here! 🌟
       }
       
       const newsAPI = new NewsAPI(newsSettings.setting_value as string)
-      const countryCode = location?.country === 'Pakistan' ? 'pk' : 'us'
+      
+      // Map country names to NewsAPI country codes
+      const countryMap: { [key: string]: string } = {
+        'Pakistan': 'us', // Pakistan not supported, use US as fallback
+        'United States': 'us', 'USA': 'us', 'America': 'us',
+        'United Kingdom': 'gb', 'UK': 'gb', 'England': 'gb',
+        'India': 'in', 'China': 'cn', 'Japan': 'jp',
+        'Germany': 'de', 'France': 'fr', 'Canada': 'ca',
+        'Australia': 'au', 'Brazil': 'br', 'Russia': 'ru',
+        'South Korea': 'kr', 'Italy': 'it', 'Spain': 'es',
+        'Mexico': 'mx', 'Indonesia': 'id', 'Turkey': 'tr',
+        'Saudi Arabia': 'sa', 'Argentina': 'ar', 'South Africa': 'za',
+        'Egypt': 'eg', 'UAE': 'ae', 'United Arab Emirates': 'ae',
+        'Malaysia': 'my', 'Singapore': 'sg', 'Philippines': 'ph',
+        'Thailand': 'th', 'Vietnam': 'us', 'Bangladesh': 'us',
+        'Iran': 'us', 'Iraq': 'us', 'Afghanistan': 'us'
+      }
+      
+      const countryCode = countryMap[location?.country as string] || 'us'
       const newsResult = await newsAPI.getTopHeadlines(countryCode)
       
       if (newsResult.success && newsResult.articles) {
@@ -298,29 +316,60 @@ Smart weather & news automation delivered right here! 🌟
     }
     else if (text.startsWith('/help')) {
       const helpMsg = `
-<b>❓ Help & Usage</b>
+╔══════════════════════════╗
+❓ <b>AlertFlow Help Guide</b>
+╚══════════════════════════╝
 
-<b>Weather Commands:</b>
-/weather - Current weather
-/forecast or /7day - 7-day forecast
-/weather <city> - Weather for any city
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>News Commands:</b>
-/news - Top headlines
+<b>🌤️ Weather Commands:</b>
 
-<b>Other Commands:</b>
-/start - Start the bot
-/settings - View your settings
-/help - Show this help
+/weather
+└ Get your local weather update
 
-<b>Features:</b>
-• Automated daily weather & news
-• 7-day weather forecasts
-• Multi-language support (EN/UR)
-• Custom notification schedules
+/checkweather City Name
+└ Check weather anywhere worldwide
+└ Example: /checkweather Tokyo
 
-<b>Need more help?</b>
-Visit our website or contact support.
+/forecast or /7day
+└ Get 7-day weather forecast
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>📰 News Commands:</b>
+
+/news
+└ Get today's top headlines
+└ News from your country
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>⚙️ Account Commands:</b>
+
+/settings
+└ View your account settings
+└ Location, schedules, preferences
+
+/start
+└ Welcome message & quick start
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>✨ Premium Features:</b>
+
+• 📅 Automated daily updates
+• 🌍 Multi-language support (EN/UR)
+• ⏰ Custom notification schedules
+• 🎯 Personalized content
+• 🌡️ Temperature unit preference
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>🆘 Need Help?</b>
+Visit: ${c.req.header('origin') || 'alertflow.pages.dev'}
+WhatsApp: +92 343 0641457
+
+<i>Powered by AlertFlow ⚡</i>
       `.trim()
       
       await bot.sendMessage(chatId, helpMsg)

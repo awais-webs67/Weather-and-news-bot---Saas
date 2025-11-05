@@ -282,7 +282,7 @@ adminApi.post('/test/gemini', adminAuthMiddleware, async (c) => {
     // Test Gemini API with a simple prompt
     const testPrompt = 'Say hello in one sentence.'
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -304,14 +304,14 @@ adminApi.post('/test/gemini', adminAuthMiddleware, async (c) => {
         'gemini',
         'test_connection',
         true,
-        JSON.stringify({ model: 'gemini-1.5-flash' }),
+        JSON.stringify({ model: 'gemini-2.5-flash' }),
         undefined
       )
       
       return c.json({
         success: true,
         data: {
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           response: aiResponse
         }
       })

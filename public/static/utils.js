@@ -3,15 +3,15 @@
 // Toast notification system
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
+  toast.className = `toast ${type}`;
   toast.innerHTML = `
-    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
-    ${message}
+    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+    <span>${message}</span>
   `;
   document.body.appendChild(toast);
   
   setTimeout(() => {
-    toast.style.animation = 'slideIn 0.3s ease reverse';
+    toast.style.animation = 'slideOutDown 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }

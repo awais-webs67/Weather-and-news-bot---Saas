@@ -68,20 +68,27 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
     <!-- Navigation -->
     <nav class="bg-white shadow-lg border-b-4 border-red-600">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 items-center">
-                <div class="flex items-center space-x-3">
+            <div class="flex justify-between h-16 md:h-20 items-center">
+                <div class="flex items-center space-x-2 md:space-x-3">
                     <div class="relative">
                         <div class="absolute inset-0 bg-gradient-to-br from-red-400 to-orange-500 rounded-xl blur opacity-60"></div>
-                        <div class="relative bg-gradient-to-br from-red-600 to-orange-600 p-2.5 rounded-xl">
-                            <i class="fas fa-user-shield text-2xl text-white"></i>
+                        <div class="relative bg-gradient-to-br from-red-600 to-orange-600 p-2 md:p-2.5 rounded-xl">
+                            <i class="fas fa-user-shield text-xl md:text-2xl text-white"></i>
                         </div>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">AlertFlow</span>
-                        <span class="text-xs text-gray-500 font-semibold">Admin Panel</span>
+                        <span class="text-lg md:text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">AlertFlow</span>
+                        <span class="text-[10px] md:text-xs text-gray-500 font-semibold">Admin Panel</span>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
+                
+                <!-- Mobile menu button -->
+                <button onclick="toggleAdminMenu()" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                    <i id="adminMenuIcon" class="fas fa-bars text-gray-600 text-xl"></i>
+                </button>
+                
+                <!-- Desktop menu -->
+                <div class="hidden md:flex items-center space-x-4">
                     <a href="/" class="nav-link text-gray-600">
                         <i class="fas fa-home"></i> Home
                     </a>
@@ -93,70 +100,86 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                     </button>
                 </div>
             </div>
+            
+            <!-- Mobile menu -->
+            <div id="adminMobileMenu" class="hidden md:hidden py-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-2">
+                    <a href="/" class="nav-link text-gray-600 justify-start">
+                        <i class="fas fa-home w-6"></i> Home
+                    </a>
+                    <a href="/dashboard" class="nav-link text-gray-600 justify-start">
+                        <i class="fas fa-users w-6"></i> User View
+                    </a>
+                    <button onclick="logout()" class="nav-link text-red-600 hover:bg-red-50 justify-start w-full">
+                        <i class="fas fa-sign-out-alt w-6"></i> Logout
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold gradient-text">System Administration</h1>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-4">
+            <h1 class="text-2xl md:text-4xl font-bold gradient-text">System Administration</h1>
             <div class="flex space-x-3">
-                <button onclick="refreshStats()" class="btn-secondary">
-                    <i class="fas fa-sync-alt"></i> Refresh
+                <button onclick="refreshStats()" class="btn-secondary text-sm md:text-base">
+                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                 </button>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             <div class="glass-card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-blue-100 text-sm">Total Users</p>
-                        <p class="text-3xl font-bold" id="totalUsers">0</p>
+                        <p class="text-blue-100 text-xs md:text-sm">Total Users</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="totalUsers">0</p>
                     </div>
-                    <i class="fas fa-users text-5xl text-blue-200"></i>
+                    <i class="fas fa-users text-3xl md:text-5xl text-blue-200"></i>
                 </div>
             </div>
             
             <div class="glass-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-yellow-100 text-sm">Active Trials</p>
-                        <p class="text-3xl font-bold" id="activeTrials">0</p>
+                        <p class="text-yellow-100 text-xs md:text-sm">Active Trials</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="activeTrials">0</p>
                     </div>
-                    <i class="fas fa-clock text-5xl text-yellow-200"></i>
+                    <i class="fas fa-clock text-3xl md:text-5xl text-yellow-200"></i>
                 </div>
             </div>
             
             <div class="glass-card bg-gradient-to-br from-green-500 to-green-600 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-green-100 text-sm">Premium Users</p>
-                        <p class="text-3xl font-bold" id="premiumUsers">0</p>
+                        <p class="text-green-100 text-xs md:text-sm">Premium Users</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="premiumUsers">0</p>
                     </div>
-                    <i class="fas fa-crown text-5xl text-green-200"></i>
+                    <i class="fas fa-crown text-3xl md:text-5xl text-green-200"></i>
                 </div>
             </div>
             
             <div class="glass-card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-purple-100 text-sm">Messages Today</p>
-                        <p class="text-3xl font-bold" id="messagesToday">0</p>
+                        <p class="text-purple-100 text-xs md:text-sm">Messages Today</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="messagesToday">0</p>
                     </div>
-                    <i class="fas fa-envelope text-5xl text-purple-200"></i>
+                    <i class="fas fa-envelope text-3xl md:text-5xl text-purple-200"></i>
                 </div>
             </div>
         </div>
 
         <!-- API Configuration & Testing -->
-        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
             <!-- Telegram API -->
             <div class="glass-card">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold flex items-center text-blue-600">
-                        <i class="fab fa-telegram text-3xl mr-3"></i>
-                        Telegram Bot API
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-3">
+                    <h2 class="text-xl md:text-2xl font-bold flex items-center text-blue-600">
+                        <i class="fab fa-telegram text-2xl md:text-3xl mr-2 md:mr-3"></i>
+                        <span class="hidden sm:inline">Telegram Bot API</span>
+                        <span class="sm:hidden">Telegram API</span>
                     </h2>
                     <span id="telegramStatus" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-600">
                         Not Tested
@@ -173,9 +196,9 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         <p class="text-xs text-gray-500 mt-1">Get from: <a href="https://t.me/BotFather" target="_blank" class="text-blue-600 hover:underline">@BotFather</a></p>
                     </div>
 
-                    <div class="flex space-x-3">
+                    <div class="flex flex-col sm:flex-row gap-3">
                         <button onclick="testTelegram()" class="btn-primary flex-1">
-                            <i class="fas fa-vial mr-2"></i> Test Connection
+                            <i class="fas fa-vial mr-2"></i> <span class="hidden sm:inline">Test Connection</span><span class="sm:hidden">Test</span>
                         </button>
                         <button onclick="saveTelegramKey()" class="btn-secondary">
                             <i class="fas fa-save"></i> Save
@@ -331,6 +354,72 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
         </div>
 
+        <!-- Bot Settings Management -->
+        <div class="glass-card mb-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center text-purple-600">
+                <i class="fas fa-robot text-3xl mr-3"></i>
+                Bot Settings
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Configure and update your Telegram bot information</p>
+            
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fab fa-telegram text-blue-500"></i> Bot Username
+                        </label>
+                        <div class="input-field bg-white flex items-center justify-between">
+                            <span class="text-gray-700 font-mono">@AivraSols_bot</span>
+                            <a href="https://t.me/AivraSols_bot" target="_blank" class="text-blue-500 hover:text-blue-600">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-link text-purple-500"></i> Bot Link
+                        </label>
+                        <div class="input-field bg-white flex items-center justify-between">
+                            <span class="text-gray-500 text-sm">https://t.me/AivraSols_bot</span>
+                            <button onclick="copyToClipboard('https://t.me/AivraSols_bot')" class="text-purple-500 hover:text-purple-600">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-key text-orange-500"></i> Bot Token (Current)
+                        </label>
+                        <div class="input-field bg-white flex items-center justify-between">
+                            <span class="text-gray-500 font-mono text-sm">8492433968:AAF...X3s</span>
+                            <span class="text-green-600">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-users text-teal-500"></i> Bot Status
+                        </label>
+                        <div class="input-field bg-white flex items-center justify-between">
+                            <span class="text-gray-700">Connected & Running</span>
+                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+                    <p class="text-xs text-gray-700 mb-2">
+                        <i class="fas fa-info-circle text-blue-500"></i> 
+                        <strong>Note:</strong> To update bot credentials, contact your developer or update via @BotFather on Telegram.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
         <!-- Channel Management -->
         <div class="glass-card mb-8">
             <h2 class="text-2xl font-bold mb-6 flex items-center text-gray-900">
@@ -360,27 +449,27 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
             
             <!-- WhatsApp Toggle -->
-            <div class="border-2 border-green-200 rounded-xl p-6 bg-green-50 opacity-60">
+            <div class="border-2 border-green-200 rounded-xl p-6 bg-green-50">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <i class="fab fa-whatsapp text-5xl text-green-600"></i>
                         <div>
-                            <h3 class="text-xl font-bold text-gray-800">WhatsApp Cloud API</h3>
-                            <p class="text-sm text-gray-600">Coming soon - Enterprise messaging integration</p>
-                            <span class="inline-block mt-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
-                                🔒 Disabled (In Development)
+                            <h3 class="text-xl font-bold text-gray-800">WhatsApp Notifications</h3>
+                            <p class="text-sm text-gray-600">Direct messaging via WhatsApp for premium users</p>
+                            <span id="whatsappChannelStatus" class="inline-block mt-2 px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-semibold">
+                                ⚠️ Disabled (Default)
                             </span>
                         </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-not-allowed">
-                        <input type="checkbox" id="whatsappToggle" class="sr-only peer" disabled>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="whatsappToggle" class="sr-only peer" onchange="toggleWhatsApp(this.checked)">
                         <div class="w-16 h-8 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
                     </label>
                 </div>
                 <div class="mt-4 p-3 bg-white rounded-lg border border-green-200">
                     <p class="text-xs text-gray-700">
                         <i class="fas fa-info-circle text-blue-500"></i> 
-                        <strong>WhatsApp Integration:</strong> Requires WhatsApp Business API credentials. This feature will be enabled in a future update with proper API configuration.
+                        <strong>WhatsApp Integration:</strong> Uses wa.me links for direct messaging. No API credentials required. Contact: +92 343 0641457
                     </p>
                 </div>
             </div>
@@ -454,6 +543,21 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script src="/static/utils.js"></script>
     <script>
+        // Mobile menu toggle
+        function toggleAdminMenu() {
+            const menu = document.getElementById('adminMobileMenu');
+            const icon = document.getElementById('adminMenuIcon');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+        
         // Load initial data
         async function init() {
             await loadStats();
@@ -795,6 +899,29 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 showToast('Failed to update Telegram channel status', 'error');
                 // Revert toggle
                 document.getElementById('telegramToggle').checked = !isEnabled;
+            }
+        }
+        
+        async function toggleWhatsApp(isEnabled) {
+            try {
+                await axios.post('/api/admin/settings', {
+                    settings: { whatsapp_enabled: isEnabled ? '1' : '0' }
+                });
+                
+                const statusEl = document.getElementById('whatsappChannelStatus');
+                if (isEnabled) {
+                    statusEl.textContent = '✓ Active & Enabled';
+                    statusEl.className = 'inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';
+                    showToast('WhatsApp notifications enabled successfully!', 'success');
+                } else {
+                    statusEl.textContent = '⚠ Disabled (Default)';
+                    statusEl.className = 'inline-block mt-2 px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-semibold';
+                    showToast('WhatsApp notifications disabled.', 'warning');
+                }
+            } catch (error) {
+                showToast('Failed to update WhatsApp status', 'error');
+                // Revert toggle
+                document.getElementById('whatsappToggle').checked = !isEnabled;
             }
         }
 

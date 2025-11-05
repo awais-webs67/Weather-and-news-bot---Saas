@@ -316,16 +316,48 @@ export class NewsAPI {
     this.apiKey = apiKey
   }
 
+  // Map of supported countries - NewsAPI v2 top-headlines supported countries
+  private static supportedCountries: { [key: string]: string } = {
+    'ae': 'United Arab Emirates', 'ar': 'Argentina', 'at': 'Austria', 'au': 'Australia',
+    'be': 'Belgium', 'bg': 'Bulgaria', 'br': 'Brazil', 'ca': 'Canada', 'ch': 'Switzerland',
+    'cn': 'China', 'co': 'Colombia', 'cu': 'Cuba', 'cz': 'Czech Republic', 'de': 'Germany',
+    'eg': 'Egypt', 'fr': 'France', 'gb': 'United Kingdom', 'gr': 'Greece', 'hk': 'Hong Kong',
+    'hu': 'Hungary', 'id': 'Indonesia', 'ie': 'Ireland', 'il': 'Israel', 'in': 'India',
+    'it': 'Italy', 'jp': 'Japan', 'kr': 'South Korea', 'lt': 'Lithuania', 'lv': 'Latvia',
+    'ma': 'Morocco', 'mx': 'Mexico', 'my': 'Malaysia', 'ng': 'Nigeria', 'nl': 'Netherlands',
+    'no': 'Norway', 'nz': 'New Zealand', 'ph': 'Philippines', 'pl': 'Poland', 'pt': 'Portugal',
+    'ro': 'Romania', 'rs': 'Serbia', 'ru': 'Russia', 'sa': 'Saudi Arabia', 'se': 'Sweden',
+    'sg': 'Singapore', 'si': 'Slovenia', 'sk': 'Slovakia', 'th': 'Thailand', 'tr': 'Turkey',
+    'tw': 'Taiwan', 'ua': 'Ukraine', 'us': 'United States', 've': 'Venezuela', 'za': 'South Africa'
+  }
+
   async getTopHeadlines(country: string = 'us', category?: string): Promise<{ success: boolean; articles?: any[]; error?: string }> {
     try {
-      let url = `https://newsapi.org/v2/top-headlines?country=${country.toLowerCase()}&apiKey=${this.apiKey}`
+      const countryCode = country.toLowerCase()
+      
+      // Check if API key is valid (not empty, not placeholder)
+      if (!this.apiKey || this.apiKey.trim() === '' || this.apiKey === 'your-api-key') {
+        return {
+          success: false,
+          error: 'News API key not configured. Please contact admin.'
+        }
+      }
+      
+      // Check if country is supported
+      if (!NewsAPI.supportedCountries[countryCode]) {
+        // If country not supported, fall back to 'us'
+        console.log(`Country ${countryCode} not supported by NewsAPI, using 'us' as fallback`)
+        return await this.getTopHeadlines('us', category)
+      }
+      
+      let url = `https://newsapi.org/v2/top-headlines?country=${countryCode}&apiKey=${this.apiKey}`
       if (category) {
         url += `&category=${category}`
       }
       
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'WeatherAlert/1.0',
+          'User-Agent': 'AlertFlow/1.0',
           'Accept': 'application/json'
         }
       })
@@ -349,14 +381,27 @@ export class NewsAPI {
       }
     }
   }
+  
+  // Get list of supported countries for UI
+  static getSupportedCountries(): { code: string; name: string }[] {
+    return Object.entries(NewsAPI.supportedCountries).map(([code, name]) => ({ code, name }))
+  }
 
   async searchNews(query: string): Promise<{ success: boolean; articles?: any[]; error?: string }> {
     try {
+      // Check if API key is valid
+      if (!this.apiKey || this.apiKey.trim() === '' || this.apiKey === 'your-api-key') {
+        return {
+          success: false,
+          error: 'News API key not configured. Please contact admin.'
+        }
+      }
+      
       const response = await fetch(
         `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&apiKey=${this.apiKey}`,
         {
           headers: {
-            'User-Agent': 'WeatherAlert/1.0',
+            'User-Agent': 'AlertFlow/1.0',
             'Accept': 'application/json'
           }
         }

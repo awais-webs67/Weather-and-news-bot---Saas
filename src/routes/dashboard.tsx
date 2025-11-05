@@ -238,14 +238,35 @@ dashboard.get('/', async (c) => {
                         </label>
                         <input type="text" id="telegram_username" placeholder="@username" 
                             class="input-field">
-                        <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="mt-3 p-3 bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-blue-300 rounded-lg">
+                            <div class="mb-3 pb-3 border-b border-blue-200">
+                                <p class="text-xs text-gray-700 mb-2 font-bold flex items-center">
+                                    <i class="fab fa-telegram text-blue-600 text-lg mr-2"></i> 
+                                    Our Telegram Bot
+                                </p>
+                                <div class="flex items-center justify-between bg-white p-2 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="bg-blue-500 p-2 rounded-lg mr-2">
+                                            <i class="fab fa-telegram text-white text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-blue-700 text-sm">@AivraSols_bot</p>
+                                            <p class="text-xs text-gray-500">Your Weather & News Assistant</p>
+                                        </div>
+                                    </div>
+                                    <a href="https://t.me/AivraSols_bot" target="_blank" 
+                                       class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">
+                                        <i class="fas fa-external-link-alt mr-1"></i> Open Bot
+                                    </a>
+                                </div>
+                            </div>
                             <p class="text-xs text-gray-700 mb-2 font-semibold">
                                 <i class="fas fa-info-circle text-blue-500 mr-1"></i> Setup Instructions:
                             </p>
                             <ol class="text-xs text-gray-600 space-y-1 ml-4 list-decimal">
                                 <li>Enter your Telegram username above (with or without @)</li>
                                 <li>Save your channel settings</li>
-                                <li>Search for the bot and send <code class="bg-gray-200 px-1 rounded">/start</code></li>
+                                <li>Click "Open Bot" above and send <code class="bg-gray-200 px-1 rounded">/start</code></li>
                                 <li>Click "Connect Telegram" below to link your account</li>
                             </ol>
                         </div>
