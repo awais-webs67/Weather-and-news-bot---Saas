@@ -277,6 +277,51 @@ adminApi.post('/trigger-scheduler', adminAuthMiddleware, async (c) => {
   }
 })
 
+// Generate license key
+adminApi.post('/generate-license', adminAuthMiddleware, async (c) => {
+  try {
+    const admin = c.get('admin')
+    const { planType, durationDays } = await c.req.json()
+    
+    if (!planType || !durationDays) {
+      return c.json({ error: 'Plan type and duration required' }, 400)
+    }
+    
+    const { generateLicenseKey } = await import('../lib/pricing')
+    const licenseKey = generateLicenseKey()
+    
+    const result = await c.env.DB.prepare(`
+      INSERT INTO license_keys (license_key, plan_type, duration_days, created_by_admin_id)
+      VALUES (?, ?, ?, ?)
+    `).bind(licenseKey, planType, durationDays, admin.id).run()
+    
+    if (result.success) {
+      return c.json({ success: true, licenseKey, planType, durationDays })
+    } else {
+      return c.json({ error: 'Failed to generate key' }, 500)
+    }
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// Get all license keys
+adminApi.get('/license-keys', adminAuthMiddleware, async (c) => {
+  try {
+    const result = await c.env.DB.prepare(`
+      SELECT lk.*, u.email as used_by_email 
+      FROM license_keys lk
+      LEFT JOIN users u ON lk.used_by_user_id = u.id
+      ORDER BY lk.created_at DESC
+      LIMIT 100
+    `).all()
+    
+    return c.json({ success: true, keys: result.results })
+  } catch (error) {
+    return c.json({ error: 'Failed to load keys' }, 500)
+  }
+})
+
 // Get users
 adminApi.get('/users', adminAuthMiddleware, async (c) => {
   try {

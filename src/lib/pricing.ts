@@ -8,10 +8,10 @@ export const PRICING_PLANS = {
     features: [
       'Unlimited weather updates',
       'Daily news summaries',
-      'Telegram & WhatsApp support',
+      'Telegram notifications',
       '7-day forecast',
       'Multi-language support',
-      'Priority support'
+      'Email support'
     ]
   },
   yearly: {
@@ -22,10 +22,10 @@ export const PRICING_PLANS = {
     features: [
       'All Monthly features',
       'Save 20% annually',
-      'Extended weather data',
-      'Premium news sources',
-      'Advanced AI insights',
-      '24/7 priority support'
+      'AI-powered insights',
+      'Priority support',
+      'Advanced forecasts',
+      '24/7 assistance'
     ],
     savings: '20% OFF'
   }
@@ -33,33 +33,18 @@ export const PRICING_PLANS = {
 
 export function generateLicenseKey(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  const segments = 4
-  const segmentLength = 4
-  
   let key = ''
-  for (let i = 0; i < segments; i++) {
+  for (let i = 0; i < 4; i++) {
     if (i > 0) key += '-'
-    for (let j = 0; j < segmentLength; j++) {
+    for (let j = 0; j < 4; j++) {
       key += chars.charAt(Math.floor(Math.random() * chars.length))
     }
   }
-  
   return key
 }
 
-export function getWhatsAppPaymentMessage(planType: 'monthly' | 'yearly', userEmail: string): string {
-  const plan = PRICING_PLANS[planType]
-  return `Hello! I want to subscribe to WeatherNews Alert.
-
-Plan: ${plan.name}
-Price: $${plan.price}
-Email: ${userEmail}
-
-Please provide payment instructions.`
-}
-
-export function getWhatsAppPaymentLink(planType: 'monthly' | 'yearly', userEmail: string): string {
-  const phoneNumber = '923430641457' // Admin WhatsApp number
-  const message = encodeURIComponent(getWhatsAppPaymentMessage(planType, userEmail))
-  return `https://wa.me/${phoneNumber}?text=${message}`
+export function getWhatsAppPaymentLink(planType: string, userEmail: string): string {
+  const plan = PRICING_PLANS[planType as keyof typeof PRICING_PLANS]
+  const message = `Hello! I want to subscribe to WeatherNews Alert.\n\nPlan: ${plan.name}\nPrice: $${plan.price}\nEmail: ${userEmail}\n\nPlease provide payment instructions.`
+  return `https://wa.me/923430641457?text=${encodeURIComponent(message)}`
 }

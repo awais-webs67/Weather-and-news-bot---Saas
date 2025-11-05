@@ -485,4 +485,84 @@ Have a great day! ☀️
   }
 })
 
+// Activate license key
+api.post('/user/activate-license', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user') as User
+    const { licenseKey } = await c.req.json()
+    
+    if (!licenseKey) {
+      return c.json({ error: 'License key required' }, 400)
+    }
+    
+    // Check if key exists and is unused
+    const key = await c.env.DB.prepare(
+      'SELECT * FROM license_keys WHERE license_key = ? AND is_used = 0'
+    ).bind(licenseKey.toUpperCase().trim()).first()
+    
+    if (!key) {
+      return c.json({ error: 'Invalid or already used license key' }, 400)
+    }
+    
+    // Calculate expiry date
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + (key.duration_days as number))
+    
+    // Mark key as used
+    await c.env.DB.prepare(`
+      UPDATE license_keys 
+      SET is_used = 1, used_by_user_id = ?, activated_at = CURRENT_TIMESTAMP, expires_at = ?
+      WHERE id = ?
+    `).bind(user.id, expiresAt.toISOString(), key.id).run()
+    
+    // Update user subscription
+    await c.env.DB.prepare(`
+      UPDATE users 
+      SET subscription_plan = ?, subscription_status = 'active', trial_ends_at = ?
+      WHERE id = ?
+    `).bind(key.plan_type, expiresAt.toISOString(), user.id).run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'License activated successfully!',
+      expiresAt: expiresAt.toISOString()
+    })
+  } catch (error) {
+    console.error('Activate license error:', error)
+    return c.json({ error: 'Failed to activate license' }, 500)
+  }
+})
+
+// Request payment (create WhatsApp link)
+api.post('/user/request-payment', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user') as User
+    const { planType } = await c.req.json()
+    
+    if (!planType || !['monthly', 'yearly'].includes(planType)) {
+      return c.json({ error: 'Invalid plan type' }, 400)
+    }
+    
+    const { getWhatsAppPaymentLink, PRICING_PLANS } = await import('../lib/pricing')
+    const plan = PRICING_PLANS[planType as keyof typeof PRICING_PLANS]
+    const whatsappLink = getWhatsAppPaymentLink(planType, user.email)
+    
+    // Log payment request
+    await c.env.DB.prepare(`
+      INSERT INTO payment_requests (user_id, plan_type, amount, whatsapp_message, status)
+      VALUES (?, ?, ?, ?, 'pending')
+    `).bind(user.id, planType, plan.price, whatsappLink).run()
+    
+    return c.json({ 
+      success: true, 
+      whatsappLink,
+      plan: plan.name,
+      price: plan.price
+    })
+  } catch (error) {
+    console.error('Request payment error:', error)
+    return c.json({ error: 'Failed to create payment request' }, 500)
+  }
+})
+
 export default api
