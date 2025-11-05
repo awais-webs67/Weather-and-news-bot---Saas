@@ -8,6 +8,7 @@ import authRoutes from './routes/auth'
 import dashboardRoutes from './routes/dashboard'
 import apiRoutes from './routes/api'
 import adminRoutes from './routes/admin'
+import adminApiRoutes from './routes/admin-api'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -21,6 +22,7 @@ app.use('/static/*', serveStatic({ root: './public' }))
 app.route('/auth', authRoutes)
 app.route('/dashboard', dashboardRoutes)
 app.route('/api', apiRoutes)
+app.route('/api/admin', adminApiRoutes)
 app.route('/admin', adminRoutes)
 
 // Landing page
