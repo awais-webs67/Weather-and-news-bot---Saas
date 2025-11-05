@@ -39,15 +39,34 @@ dashboard.get('/', async (c) => {
                     <div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-2 rounded-lg">
                         <i class="fas fa-cloud-sun text-2xl text-white"></i>
                     </div>
-                    <span class="text-xl font-bold gradient-text">WeatherNews Alert</span>
+                    <span class="text-xl font-bold gradient-text hidden sm:inline">WeatherNews Alert</span>
                 </div>
-                <div class="flex items-center space-x-4">
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <div id="userClock" class="text-sm font-mono bg-purple-50 px-3 py-1 rounded-lg text-purple-700"></div>
                     <a href="/" class="nav-link text-gray-600">
-                        <i class="fas fa-home"></i> Home
+                        <i class="fas fa-home"></i> <span class="hidden lg:inline">Home</span>
                     </a>
                     <span class="text-sm text-gray-600" id="userEmail"></span>
                     <button onclick="logout()" class="nav-link text-red-600 hover:bg-red-50">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                        <i class="fas fa-sign-out-alt"></i> <span class="hidden lg:inline">Logout</span>
+                    </button>
+                </div>
+                <!-- Mobile Hamburger -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-bars text-2xl text-gray-600"></i>
+                </button>
+            </div>
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <div id="userClockMobile" class="text-sm font-mono bg-purple-50 px-3 py-2 rounded-lg text-purple-700 text-center"></div>
+                    <span class="text-sm text-gray-600 px-3 py-2" id="userEmailMobile"></span>
+                    <a href="/" class="nav-link text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-home mr-2"></i> Home
+                    </a>
+                    <button onclick="logout()" class="nav-link text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 text-left">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </button>
                 </div>
             </div>
@@ -311,6 +330,35 @@ dashboard.get('/', async (c) => {
             weather_night: ['20:00'],
             news: ['09:00']
         };
+        let userTimezone = 'UTC';
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Update clocks
+        function updateClocks() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                timeZone: userTimezone,
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            const dateString = now.toLocaleDateString('en-US', {
+                timeZone: userTimezone,
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            const clockText = \`\${dateString} \${timeString}\`;
+            document.getElementById('userClock').textContent = clockText;
+            document.getElementById('userClockMobile').textContent = clockText;
+        }
 
         // Initialize
         async function init() {
@@ -318,6 +366,10 @@ dashboard.get('/', async (c) => {
             renderScheduleTimes();
             setupCountryAutocomplete('country', 'countryDropdown');
             setupCityAutocomplete('country', 'city', 'cityDropdown');
+            
+            // Start clock
+            setInterval(updateClocks, 1000);
+            updateClocks();
         }
 
         async function loadProfile() {
@@ -340,6 +392,12 @@ dashboard.get('/', async (c) => {
             const { user, location, schedules } = userData;
             
             document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userEmailMobile').textContent = user.email;
+            
+            // Set user timezone
+            if (location && location.timezone) {
+                userTimezone = location.timezone;
+            }
             document.getElementById('subscriptionPlan').textContent = user.subscription_plan.toUpperCase();
             document.getElementById('subscriptionStatus').textContent = user.subscription_status.toUpperCase();
             
