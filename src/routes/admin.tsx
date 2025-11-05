@@ -235,6 +235,38 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </p>
         </div>
 
+        <!-- User Management -->
+        <div class="glass-card mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gradient-text">
+                    <i class="fas fa-users mr-3"></i>
+                    Registered Users
+                </h2>
+                <button onclick="loadUsers()" class="btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- API Logs -->
         <div class="glass-card">
             <div class="flex items-center justify-between mb-6">
@@ -275,6 +307,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         async function init() {
             await loadStats();
             await loadSettings();
+            await loadUsers();
             await loadLogs();
         }
 
@@ -464,6 +497,49 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                 showToast('Weather API key saved successfully!', 'success');
             } catch (error) {
                 showToast('Failed to save Weather API key', 'error');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await axios.get('/api/admin/users');
+                if (response.data.success) {
+                    const users = response.data.users;
+                    const tbody = document.getElementById('usersTableBody');
+                    
+                    if (users.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No users registered yet.</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = users.map(user => \`
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                \${user.email}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                \${user.name || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 py-1 rounded-full bg-\${user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray'}-100 text-\${user.subscription_plan === 'premium' ? 'green' : user.subscription_plan === 'trial' ? 'yellow' : 'gray'}-800">
+                                    \${user.subscription_plan.toUpperCase()}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 py-1 rounded-full bg-\${user.subscription_status === 'active' ? 'green' : 'red'}-100 text-\${user.subscription_status === 'active' ? 'green' : 'red'}-800">
+                                    \${user.subscription_status.toUpperCase()}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                \${new Date(user.created_at).toLocaleDateString()}
+                            </td>
+                        </tr>
+                    \`).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load users');
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Failed to load users</td></tr>';
             }
         }
 
