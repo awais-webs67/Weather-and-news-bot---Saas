@@ -663,10 +663,21 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         
         // Load initial data
         async function init() {
-            await loadStats();
-            await loadSettings();
-            await loadUsers();
-            await loadLogs();
+            console.log('Initializing admin panel...');
+            try {
+                console.log('Loading stats...');
+                await loadStats();
+                console.log('Loading settings...');
+                await loadSettings();
+                console.log('Loading users...');
+                await loadUsers();
+                console.log('Loading logs...');
+                await loadLogs();
+                console.log('Admin panel initialized successfully!');
+            } catch (error) {
+                console.error('Init failed:', error);
+                showToast('Failed to load admin data: ' + error.message, 'error');
+            }
         }
 
         async function loadStats() {
@@ -1330,7 +1341,15 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         }
 
         // Initialize
-        init();
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing admin panel...');
+            try {
+                init();
+            } catch (error) {
+                console.error('Init error:', error);
+                alert('Failed to initialize admin panel: ' + error.message);
+            }
+        });
     </script>
 </body>
 </html>
