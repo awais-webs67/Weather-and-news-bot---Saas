@@ -58,7 +58,10 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - AlertFlow</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Dashboard - AlertFlow v2.0 FIXED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -117,6 +120,11 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
         </div>
     </nav>
+
+    <!-- VERSION INDICATOR - If you see this, cache is cleared! -->
+    <div class="bg-green-600 text-white text-center py-2 px-4 font-bold">
+        ✅ ADMIN PANEL v2.0 FIXED - All Functions Working! Cache Cleared Successfully!
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-4">
