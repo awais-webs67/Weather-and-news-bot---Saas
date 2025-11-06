@@ -595,7 +595,7 @@ window.closeLicenseModal = function() {
     document.getElementById('licenseModal').classList.add('hidden');
 };
 
-window.generateLicenseKey = async function() {
+window.generateLicenseKey = async function(event) {
     const planType = document.getElementById('licensePlanType').value;
     const duration = document.getElementById('licenseDuration').value;
     
@@ -603,10 +603,13 @@ window.generateLicenseKey = async function() {
         return showToast('Please enter valid duration', 'warning');
     }
     
-    const btn = event.target.closest('button');
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
-    btn.disabled = true;
+    // Find the submit button
+    const btn = event ? event.target.closest('button') : document.querySelector('#licenseModal button[type="submit"]');
+    if (btn) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+        btn.disabled = true;
+    }
     
     try {
         const response = await axios.post('/api/admin/generate-license', {
@@ -619,12 +622,18 @@ window.generateLicenseKey = async function() {
             document.getElementById('generatedKey').textContent = response.data.licenseKey;
             document.getElementById('generatedKeyDisplay').classList.remove('hidden');
             loadLicenseKeys();
+        } else {
+            showToast('Generation failed: ' + (response.data.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showToast('Generation failed', 'error');
+        const errorMsg = error.response?.data?.error || error.message || 'Generation failed';
+        showToast(errorMsg, 'error');
+        console.error('License generation error:', error);
     } finally {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
+        if (btn) {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
     }
 };
 

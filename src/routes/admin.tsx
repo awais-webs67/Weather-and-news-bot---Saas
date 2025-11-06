@@ -590,7 +590,7 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
         <div class="card rounded-xl p-8 max-w-md w-full mx-4 relative z-10 shadow-2xl">
             <h3 class="text-2xl font-bold text-white mb-6">Generate License Key</h3>
             
-            <form onsubmit="event.preventDefault(); generateLicenseKey();">
+            <form onsubmit="event.preventDefault(); generateLicenseKey(event);">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-300 mb-2">Plan Type</label>
