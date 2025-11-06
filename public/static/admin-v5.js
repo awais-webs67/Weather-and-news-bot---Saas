@@ -86,6 +86,12 @@ window.loadSettings = async function() {
             if (settings.telegram_bot_token) {
                 document.getElementById('telegram_bot_token').value = settings.telegram_bot_token;
             }
+            if (settings.telegram_bot_username) {
+                document.getElementById('telegram_bot_username').value = settings.telegram_bot_username;
+            }
+            if (settings.telegram_bot_link) {
+                document.getElementById('telegram_bot_link').value = settings.telegram_bot_link;
+            }
             if (settings.weather_api_key) {
                 document.getElementById('weather_api_key').value = settings.weather_api_key;
             }
@@ -123,13 +129,20 @@ window.loadSettings = async function() {
 
 window.saveTelegramKey = async function() {
     const token = document.getElementById('telegram_bot_token').value;
+    const username = document.getElementById('telegram_bot_username').value;
+    const link = document.getElementById('telegram_bot_link').value;
+    
     if (!token) return showToast('Please enter token', 'warning');
     
     try {
         const response = await axios.post('/api/admin/settings', {
-            settings: { telegram_bot_token: token }
+            settings: { 
+                telegram_bot_token: token,
+                telegram_bot_username: username || null,
+                telegram_bot_link: link || null
+            }
         });
-        if (response.data.success) showToast('Telegram saved!', 'success');
+        if (response.data.success) showToast('Telegram bot settings saved!', 'success');
     } catch (error) {
         showToast('Save failed', 'error');
     }
@@ -406,29 +419,29 @@ window.loadUsers = async function() {
 function renderUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (state.users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No users found</td></tr>';
         return;
     }
     
     tbody.innerHTML = state.users.map(user => {
         const statusColors = {
-            active: 'bg-green-100 text-green-800',
-            inactive: 'bg-gray-100 text-gray-800',
-            suspended: 'bg-red-100 text-red-800'
+            active: 'bg-green-500/20 text-green-400 border border-green-500/30',
+            inactive: 'bg-slate-500/20 text-slate-400 border border-slate-500/30',
+            suspended: 'bg-red-500/20 text-red-400 border border-red-500/30'
         };
         
         const planColors = {
-            free: 'bg-gray-100 text-gray-800',
-            trial: 'bg-blue-100 text-blue-800',
-            premium: 'bg-purple-100 text-purple-800'
+            free: 'bg-slate-500/20 text-slate-300 border border-slate-500/30',
+            trial: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+            premium: 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
         };
         
         const date = new Date(user.created_at).toLocaleDateString();
         
         return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">${user.name || '-'}</td>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4 text-sm text-slate-200 font-medium">${user.email}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${user.name || '-'}</td>
                 <td class="px-6 py-4">
                     <span class="px-3 py-1 rounded-full text-xs font-semibold ${planColors[user.subscription_plan] || planColors.free}">
                         ${user.subscription_plan}
@@ -439,12 +452,12 @@ function renderUsers() {
                         ${user.subscription_status}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">${date}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${date}</td>
                 <td class="px-6 py-4 text-sm">
-                    <button onclick="editUser(${user.id})" class="text-blue-600 hover:text-blue-800 mr-3 font-semibold">
+                    <button onclick="editUser(${user.id})" class="text-blue-400 hover:text-blue-300 mr-3 font-semibold transition-colors">
                         <i class="fas fa-edit mr-1"></i>Edit
                     </button>
-                    <button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-800 font-semibold">
+                    <button onclick="deleteUser(${user.id})" class="text-red-400 hover:text-red-300 font-semibold transition-colors">
                         <i class="fas fa-trash mr-1"></i>Delete
                     </button>
                 </td>
@@ -553,35 +566,35 @@ window.loadLicenseKeys = async function() {
 function renderLicenseKeys() {
     const tbody = document.getElementById('licenseKeysTableBody');
     if (state.licenseKeys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No license keys generated yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No license keys generated yet</td></tr>';
         return;
     }
     
     tbody.innerHTML = state.licenseKeys.map(key => {
         const statusColors = {
-            unused: 'bg-green-100 text-green-800',
-            used: 'bg-gray-100 text-gray-800'
+            unused: 'bg-green-500/20 text-green-400 border border-green-500/30',
+            used: 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
         };
         
         const createdDate = new Date(key.created_at).toLocaleDateString();
         const usedDate = key.used_at ? new Date(key.used_at).toLocaleDateString() : '-';
         
         return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm font-mono text-gray-900">${key.license_key}</td>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4 text-sm font-mono text-yellow-300 font-bold">${key.license_key}</td>
                 <td class="px-6 py-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400 border border-purple-500/30">
                         ${key.plan_type}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">${key.duration_days} days</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${key.duration_days} days</td>
                 <td class="px-6 py-4">
                     <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColors[key.is_used ? 'used' : 'unused']}">
                         ${key.is_used ? 'Used' : 'Unused'}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">${key.used_by_email || '-'}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">${createdDate}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${key.used_by_email || '-'}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${createdDate}</td>
             </tr>
         `;
     }).join('');
@@ -663,22 +676,22 @@ window.loadLogs = async function() {
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody');
     if (state.logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No logs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">No logs found</td></tr>';
         return;
     }
     
     tbody.innerHTML = state.logs.map(log => {
         const time = new Date(log.created_at).toLocaleString();
         const statusIcon = log.success ? '✅' : '❌';
-        const statusColor = log.success ? 'text-green-600' : 'text-red-600';
+        const statusColor = log.success ? 'text-green-400' : 'text-red-400';
         
         return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm text-gray-700">${time}</td>
-                <td class="px-6 py-4 text-sm font-semibold text-gray-900">${log.api_name}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">${log.action}</td>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4 text-sm text-slate-300">${time}</td>
+                <td class="px-6 py-4 text-sm font-semibold text-slate-200">${log.api_name}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${log.action}</td>
                 <td class="px-6 py-4 text-sm ${statusColor}">${statusIcon}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">${log.details || log.error_message || '-'}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">${log.details || log.error_message || '-'}</td>
             </tr>
         `;
     }).join('');

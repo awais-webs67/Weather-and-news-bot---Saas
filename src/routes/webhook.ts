@@ -61,21 +61,30 @@ Smart weather & news automation delivered right here! 🌟
 
 <b>📋 Available Commands:</b>
 
-<b>Weather:</b>
-🌤️ /weather - Your local weather
-🌍 /checkweather - Any city worldwide
-📅 /forecast - 7-day forecast
-🕐 /hourly - Hourly forecast
-📆 /tomorrow - Tomorrow's weather
+<b>🌤️ Weather Commands:</b>
+/weather - Your local weather
+/checkweather - Any city worldwide
+/forecast - 7-day forecast
+/hourly - Hourly forecast (24h)
+/tomorrow - Tomorrow's weather
+/wind - Wind speed & direction
+/humidity - Humidity & air details
+/sunrise - Sun rise/set times
 
-<b>News:</b>
-📰 /news - Top headlines
-🌎 /topnews - News by country
-🔍 /search - Search any topic
+<b>📰 News Commands:</b>
+/news - Top headlines
+/topnews - News by country
+/search - Search any topic
+/sports - Sports news ⚽
+/tech - Technology news 💻
+/business - Business & finance 💼
+/entertainment - Entertainment 🎬
+/health - Health & medical 🏥
+/science - Science news 🔬
 
-<b>Settings:</b>
-⚙️ /settings - Your account settings
-❓ /help - Complete help guide
+<b>⚙️ Settings:</b>
+/settings - Your account settings
+/help - Complete help guide
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -627,6 +636,275 @@ Smart weather & news automation delivered right here! 🌟
         await bot.sendMessage(chatId, `⚠️ No results found for "${query}".`)
       }
     }
+    // ==========================================
+    // NEW: Additional Weather Detail Commands
+    // ==========================================
+    
+    else if (text.startsWith('/wind')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
+      
+      if (weather.success && weather.data) {
+        const windSpeed = (weather.data as any).wind_speed || 0
+        const windDeg = (weather.data as any).wind_deg || 0
+        const windDir = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(windDeg / 45) % 8]
+        
+        let msg = `💨 <b>Wind Conditions</b>\n`
+        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
+        msg += `🌬️ <b>Speed:</b> ${windSpeed.toFixed(1)} m/s\n`
+        msg += `🧭 <b>Direction:</b> ${windDir} (${windDeg}°)\n`
+        msg += `🌡️ <b>Feels Like:</b> ${weather.data.feels_like}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get wind data: ${weather.error}`)
+      }
+    }
+    
+    else if (text.startsWith('/humidity')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
+      
+      if (weather.success && weather.data) {
+        const humidity = (weather.data as any).humidity || 0
+        const pressure = (weather.data as any).pressure || 0
+        const visibility = (weather.data as any).visibility || 10000
+        
+        let msg = `💧 <b>Humidity & Air Details</b>\n`
+        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
+        msg += `💧 <b>Humidity:</b> ${humidity}%\n`
+        msg += `🔽 <b>Pressure:</b> ${pressure} hPa\n`
+        msg += `👁️ <b>Visibility:</b> ${(visibility / 1000).toFixed(1)} km\n`
+        msg += `🌡️ <b>Temperature:</b> ${weather.data.temperature}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get humidity data: ${weather.error}`)
+      }
+    }
+    
+    else if (text.startsWith('/sunrise') || text.startsWith('/sunset')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
+      
+      if (weather.success && weather.data) {
+        const sunrise = (weather.data as any).sunrise || 0
+        const sunset = (weather.data as any).sunset || 0
+        const sunriseTime = new Date(sunrise * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        const sunsetTime = new Date(sunset * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        
+        let msg = `🌅 <b>Sun Times</b>\n`
+        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
+        msg += `🌄 <b>Sunrise:</b> ${sunriseTime}\n`
+        msg += `🌇 <b>Sunset:</b> ${sunsetTime}\n`
+        msg += `☀️ <b>Current:</b> ${weather.data.description}\n`
+        msg += `🌡️ <b>Temperature:</b> ${weather.data.temperature}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get sun times: ${weather.error}`)
+      }
+    }
+    
+    // ==========================================
+    // NEW: Category-Specific News Commands
+    // ==========================================
+    
+    else if (text.startsWith('/sports')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('sports')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `⚽ <b>Sports News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get sports news.`)
+      }
+    }
+    
+    else if (text.startsWith('/tech') || text.startsWith('/technology')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('technology')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `💻 <b>Technology News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get technology news.`)
+      }
+    }
+    
+    else if (text.startsWith('/business') || text.startsWith('/finance')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('business finance')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `💼 <b>Business & Finance News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get business news.`)
+      }
+    }
+    
+    else if (text.startsWith('/entertainment') || text.startsWith('/movies')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('entertainment movies')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `🎬 <b>Entertainment News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get entertainment news.`)
+      }
+    }
+    
+    else if (text.startsWith('/health') || text.startsWith('/medical')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('health medical')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `🏥 <b>Health & Medical News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get health news.`)
+      }
+    }
+    
+    else if (text.startsWith('/science')) {
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews('science')
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `🔬 <b>Science News</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get science news.`)
+      }
+    }
+    
     else if (text.startsWith('/settings')) {
       if (!user) {
         await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
@@ -689,9 +967,18 @@ Smart weather & news automation delivered right here! 🌟
 /tomorrow
 └ Get tomorrow's weather forecast
 
+/wind
+└ Wind speed and direction
+
+/humidity
+└ Humidity, pressure, visibility
+
+/sunrise or /sunset
+└ Sun rise and set times
+
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
-<b>📰 News Commands:</b>
+<b>📰 General News Commands:</b>
 
 /news
 └ Get today's top headlines
@@ -708,6 +995,28 @@ Smart weather & news automation delivered right here! 🌟
 /search Query
 └ Search news by topic or keyword
 └ Example: /search technology
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>📂 Category News Commands:</b>
+
+/sports ⚽
+└ Sports news and updates
+
+/tech or /technology 💻
+└ Technology and gadget news
+
+/business or /finance 💼
+└ Business and financial news
+
+/entertainment or /movies 🎬
+└ Entertainment and movie news
+
+/health or /medical 🏥
+└ Health and medical updates
+
+/science 🔬
+└ Science discoveries and research
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 

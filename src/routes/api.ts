@@ -565,4 +565,28 @@ api.post('/user/request-payment', authMiddleware, async (c) => {
   }
 })
 
+// Get bot settings (public endpoint)
+api.get('/bot-settings', async (c) => {
+  try {
+    const settings = await c.env.DB.prepare(`
+      SELECT setting_key, setting_value 
+      FROM api_settings 
+      WHERE setting_key IN ('telegram_bot_username', 'telegram_bot_link')
+    `).all()
+    
+    const botSettings: any = {}
+    settings.results.forEach((row: any) => {
+      botSettings[row.setting_key] = row.setting_value
+    })
+    
+    return c.json({
+      success: true,
+      settings: botSettings
+    })
+  } catch (error) {
+    console.error('Get bot settings error:', error)
+    return c.json({ error: 'Failed to get bot settings' }, 500)
+  }
+})
+
 export default api

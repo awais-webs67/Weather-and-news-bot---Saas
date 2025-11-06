@@ -281,9 +281,32 @@
         // Initialize
         async function init() {
             await loadProfile();
+            await loadBotSettings();
             renderScheduleTimes();
             setupCountryAutocomplete('country', 'countryDropdown');
             setupCityAutocomplete('country', 'city', 'cityDropdown');
+        }
+
+        async function loadBotSettings() {
+            try {
+                const response = await axios.get('/api/bot-settings');
+                if (response.data.success) {
+                    const { telegram_bot_username, telegram_bot_link } = response.data.settings;
+                    
+                    // Update bot link in the UI
+                    const botLinkElement = document.querySelector('#telegramSetup p a');
+                    if (botLinkElement) {
+                        if (telegram_bot_username) {
+                            botLinkElement.textContent = telegram_bot_username;
+                        }
+                        if (telegram_bot_link) {
+                            botLinkElement.href = telegram_bot_link;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load bot settings');
+            }
         }
 
         async function loadProfile() {

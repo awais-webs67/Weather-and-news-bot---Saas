@@ -277,11 +277,17 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
                         </div>
                         <div>
                             <h4 class="text-base font-bold text-white">Telegram Bot</h4>
-                            <p class="text-xs text-slate-400">Bot API Token</p>
+                            <p class="text-xs text-slate-400">Bot Configuration</p>
                         </div>
                     </div>
                     
-                    <input type="text" id="telegram_bot_token" placeholder="Enter bot token" 
+                    <input type="text" id="telegram_bot_token" placeholder="Bot API Token" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-2 text-sm">
+                    
+                    <input type="text" id="telegram_bot_username" placeholder="Bot Username (e.g. @MyBot)" 
+                        class="w-full px-4 py-2.5 rounded-lg mb-2 text-sm">
+                    
+                    <input type="text" id="telegram_bot_link" placeholder="Bot Link (e.g. https://t.me/MyBot)" 
                         class="w-full px-4 py-2.5 rounded-lg mb-3 text-sm">
 
                     <div class="flex space-x-2">
