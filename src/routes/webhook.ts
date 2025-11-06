@@ -671,12 +671,27 @@ Smart weather & news automation delivered right here! 🌟
         const windSpeed = (weather.data as any).wind_speed || 0
         const windDeg = (weather.data as any).wind_deg || 0
         const windDir = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(windDeg / 45) % 8]
+        const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+        const feelsLike = location.temperature_unit === 'F' ? (weather.data.feels_like * 9/5 + 32).toFixed(1) : weather.data.feels_like.toFixed(1)
         
-        let msg = `💨 <b>Wind Conditions</b>\n`
-        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
-        msg += `🌬️ <b>Speed:</b> ${windSpeed.toFixed(1)} m/s\n`
-        msg += `🧭 <b>Direction:</b> ${windDir} (${windDeg}°)\n`
-        msg += `🌡️ <b>Feels Like:</b> ${weather.data.feels_like}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        let msg = `
+╔══════════════════════════╗
+💨 <b>Wind Conditions</b>
+╚══════════════════════════╝
+
+📍 <b>${weather.data.city}, ${weather.data.country}</b>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌬️ <b>Wind Speed:</b> ${windSpeed.toFixed(1)} m/s (${(windSpeed * 3.6).toFixed(1)} km/h)
+🧭 <b>Direction:</b> ${windDir} (${windDeg}°)
+🌡️ <b>Feels Like:</b> ${feelsLike}${unit}
+🌪️ <b>Condition:</b> ${weather.data.description}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ <i>Stay safe out there!</i>
+        `.trim()
         
         await bot.sendMessage(chatId, msg)
       } else {
@@ -715,13 +730,34 @@ Smart weather & news automation delivered right here! 🌟
         const humidity = (weather.data as any).humidity || 0
         const pressure = (weather.data as any).pressure || 0
         const visibility = (weather.data as any).visibility || 10000
+        const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+        const temp = location.temperature_unit === 'F' ? (weather.data.temperature * 9/5 + 32).toFixed(1) : weather.data.temperature.toFixed(1)
         
-        let msg = `💧 <b>Humidity & Air Details</b>\n`
-        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
-        msg += `💧 <b>Humidity:</b> ${humidity}%\n`
-        msg += `🔽 <b>Pressure:</b> ${pressure} hPa\n`
-        msg += `👁️ <b>Visibility:</b> ${(visibility / 1000).toFixed(1)} km\n`
-        msg += `🌡️ <b>Temperature:</b> ${weather.data.temperature}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        // Humidity level description
+        const humidityLevel = humidity < 30 ? 'Low (Dry)' : humidity < 60 ? 'Comfortable' : humidity < 80 ? 'High' : 'Very High'
+        
+        let msg = `
+╔══════════════════════════╗
+💧 <b>Humidity & Air Quality</b>
+╚══════════════════════════╝
+
+📍 <b>${weather.data.city}, ${weather.data.country}</b>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+💧 <b>Humidity:</b> ${humidity}% (${humidityLevel})
+🔽 <b>Pressure:</b> ${pressure} hPa
+👁️ <b>Visibility:</b> ${(visibility / 1000).toFixed(1)} km
+🌡️ <b>Temperature:</b> ${temp}${unit}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+☁️ <b>Condition:</b> ${weather.data.description}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ <i>Stay hydrated!</i>
+        `.trim()
         
         await bot.sendMessage(chatId, msg)
       } else {
@@ -761,13 +797,36 @@ Smart weather & news automation delivered right here! 🌟
         const sunset = (weather.data as any).sunset || 0
         const sunriseTime = new Date(sunrise * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
         const sunsetTime = new Date(sunset * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+        const temp = location.temperature_unit === 'F' ? (weather.data.temperature * 9/5 + 32).toFixed(1) : weather.data.temperature.toFixed(1)
         
-        let msg = `🌅 <b>Sun Times</b>\n`
-        msg += `📍 ${weather.data.city}, ${weather.data.country}\n\n`
-        msg += `🌄 <b>Sunrise:</b> ${sunriseTime}\n`
-        msg += `🌇 <b>Sunset:</b> ${sunsetTime}\n`
-        msg += `☀️ <b>Current:</b> ${weather.data.description}\n`
-        msg += `🌡️ <b>Temperature:</b> ${weather.data.temperature}${location.temperature_unit === 'F' ? '°F' : '°C'}\n`
+        // Calculate daylight duration
+        const daylightSeconds = sunset - sunrise
+        const hours = Math.floor(daylightSeconds / 3600)
+        const minutes = Math.floor((daylightSeconds % 3600) / 60)
+        
+        let msg = `
+╔══════════════════════════╗
+🌅 <b>Sun Times</b>
+╚══════════════════════════╝
+
+📍 <b>${weather.data.city}, ${weather.data.country}</b>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌄 <b>Sunrise:</b> ${sunriseTime}
+🌇 <b>Sunset:</b> ${sunsetTime}
+⏱️ <b>Daylight:</b> ${hours}h ${minutes}m
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+☀️ <b>Current:</b> ${weather.data.description}
+🌡️ <b>Temperature:</b> ${temp}${unit}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ <i>Enjoy your day!</i>
+        `.trim()
         
         await bot.sendMessage(chatId, msg)
       } else {

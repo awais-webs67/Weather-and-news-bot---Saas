@@ -479,8 +479,19 @@
         }
 
         async function testNotification() {
-            showToast('Test notification sent! Check your Telegram', 'info');
-            // TODO: Implement actual test notification
+            try {
+                showToast('Sending test notification...', 'info');
+                const response = await axios.post('/api/user/test-notification');
+                
+                if (response.data.success) {
+                    showToast('✅ Test notification sent! Check your Telegram', 'success');
+                } else {
+                    showToast(response.data.error || 'Failed to send test notification', 'error');
+                }
+            } catch (error) {
+                const errorMsg = error.response?.data?.error || 'Failed to send test notification';
+                showToast(errorMsg, 'error');
+            }
         }
 
         async function logout() {
