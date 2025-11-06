@@ -479,9 +479,20 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
       if (forecast.success && forecast.data) {
         const unit = location.temperature_unit === 'F' ? '°F' : '°C'
         
+        // Group forecast by day
+        const dayGroups: any = {}
+        forecast.data.forecast.forEach((item: any) => {
+          const date = new Date(item.timestamp * 1000)
+          const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+          if (!dayGroups[dayKey]) {
+            dayGroups[dayKey] = []
+          }
+          dayGroups[dayKey].push(item)
+        })
+        
         let msg = `
 ╔══════════════════════════╗
-📅 <b>24-Hour Detailed Forecast</b>
+📅 <b>5-Day Weather Forecast</b>
 ╚══════════════════════════╝
 
 📍 <b>${forecast.data.city}, ${forecast.data.country}</b>
@@ -489,29 +500,84 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 `
         
-        forecast.data.forecast.forEach((item: any, index: number) => {
-          const temp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
-          const feelsLike = location.temperature_unit === 'F' ? (item.feels_like * 9/5 + 32).toFixed(1) : item.feels_like.toFixed(1)
-          const tempMin = location.temperature_unit === 'F' ? (item.temp_min * 9/5 + 32).toFixed(1) : item.temp_min.toFixed(1)
-          const tempMax = location.temperature_unit === 'F' ? (item.temp_max * 9/5 + 32).toFixed(1) : item.temp_max.toFixed(1)
-          const time = new Date(item.timestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-          const rainChance = Math.round(item.pop * 100)
-          const windDir = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(item.wind_deg / 45) % 8]
+        // Process each day
+        Object.keys(dayGroups).slice(0, 5).forEach((dayKey, index) => {
+          const dayData = dayGroups[dayKey]
+          
+          // Calculate day statistics
+          const temps = dayData.map((d: any) => d.temperature)
+          const avgTemp = temps.reduce((a: number, b: number) => a + b, 0) / temps.length
+          const minTemp = Math.min(...dayData.map((d: any) => d.temp_min))
+          const maxTemp = Math.max(...dayData.map((d: any) => d.temp_max))
+          const avgHumidity = Math.round(dayData.reduce((sum: number, d: any) => sum + d.humidity, 0) / dayData.length)
+          const maxRainChance = Math.max(...dayData.map((d: any) => d.pop)) * 100
+          const avgWindSpeed = dayData.reduce((sum: number, d: any) => sum + d.wind_speed, 0) / dayData.length
+          
+          // Most common condition
+          const conditions = dayData.map((d: any) => d.description)
+          const mostCommon = conditions.sort((a: string, b: string) =>
+            conditions.filter((v: string) => v === a).length - conditions.filter((v: string) => v === b).length
+          ).pop()
+          
+          // Estimate AQI based on visibility and humidity
+          const avgVisibility = dayData.reduce((sum: number, d: any) => sum + (d.visibility || 10000), 0) / dayData.length
+          let aqi = 'Good'
+          if (avgVisibility < 3000 || avgHumidity > 80) aqi = 'Moderate'
+          if (avgVisibility < 2000) aqi = 'Unhealthy'
+          
+          const tempAvg = location.temperature_unit === 'F' ? (avgTemp * 9/5 + 32).toFixed(1) : avgTemp.toFixed(1)
+          const tempMin = location.temperature_unit === 'F' ? (minTemp * 9/5 + 32).toFixed(1) : minTemp.toFixed(1)
+          const tempMax = location.temperature_unit === 'F' ? (maxTemp * 9/5 + 32).toFixed(1) : maxTemp.toFixed(1)
           
           msg += `
-⏰ <b>${time}</b>
-🌡️ ${temp}${unit} (${tempMin}-${tempMax}${unit})
-🤔 Feels: ${feelsLike}${unit}
-☁️ ${item.description}
-💧 Humidity: ${item.humidity}% | Pressure: ${item.pressure} hPa
-💨 Wind: ${item.wind_speed.toFixed(1)} m/s ${windDir}
-☁️ Clouds: ${item.clouds}%${rainChance > 0 ? `\n☔ Rain Chance: ${rainChance}%` : ''}${item.rain > 0 ? `\n🌧️ Rain: ${item.rain.toFixed(1)}mm` : ''}
+📆 <b>${dayKey}</b>
+🌡️ ${tempAvg}${unit} (${tempMin}° - ${tempMax}°)
+☁️ ${mostCommon}
+💧 Humidity: ${avgHumidity}%
+💨 Wind: ${avgWindSpeed.toFixed(1)} m/s
+☔ Rain: ${Math.round(maxRainChance)}%
+🌫️ Air Quality: ${aqi}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 `
         })
         
-        msg += `\n✨ <i>Stay prepared for the day ahead!</i>`
+        // Add Gemini AI recommendations if available
+        const geminiSettings = await c.env.DB.prepare(
+          "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+        ).first()
+        
+        if (geminiSettings && geminiSettings.setting_value) {
+          try {
+            const { GeminiAPI } = await import('../lib/integrations')
+            const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+            
+            // Use first day data for AI analysis
+            const firstDayData = Object.values(dayGroups)[0] as any[]
+            const avgFirstDay = {
+              temperature: firstDayData.reduce((sum: number, d: any) => sum + d.temperature, 0) / firstDayData.length,
+              humidity: Math.round(firstDayData.reduce((sum: number, d: any) => sum + d.humidity, 0) / firstDayData.length),
+              wind_speed: firstDayData.reduce((sum: number, d: any) => sum + d.wind_speed, 0) / firstDayData.length,
+              description: firstDayData[0].description,
+              pressure: firstDayData[0].pressure,
+              visibility: firstDayData[0].visibility,
+              feels_like: firstDayData[0].feels_like
+            }
+            
+            const advice = await gemini.analyzeWeatherAndProvideAdvice(
+              avgFirstDay,
+              `${forecast.data.city}, ${forecast.data.country}`
+            )
+            
+            if (advice.success && advice.advice) {
+              msg += `\n🤖 <b>AI Weather Advisor:</b>\n\n${advice.advice}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n`
+            }
+          } catch (error) {
+            console.log('Gemini AI not available')
+          }
+        }
+        
+        msg += `\n✨ <i>Plan your week with confidence!</i>`
         await bot.sendMessage(chatId, msg.trim())
       } else {
         await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)

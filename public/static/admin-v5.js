@@ -54,15 +54,26 @@ window.showToast = function(message, type = 'info') {
 window.loadStats = async function() {
     try {
         const response = await axios.get('/api/admin/stats');
+        console.log('Stats response:', response.data);
         if (response.data.success) {
             const { totalUsers, activeTrials, premiumUsers, messagesToday } = response.data.stats;
-            document.getElementById('totalUsers').textContent = totalUsers;
-            document.getElementById('activeTrials').textContent = activeTrials;
-            document.getElementById('premiumUsers').textContent = premiumUsers;
-            document.getElementById('messagesToday').textContent = messagesToday;
+            console.log('Stats values:', { totalUsers, activeTrials, premiumUsers, messagesToday });
+            
+            const totalUsersEl = document.getElementById('totalUsers');
+            const activeTrialsEl = document.getElementById('activeTrials');
+            const premiumUsersEl = document.getElementById('premiumUsers');
+            const messagesTodayEl = document.getElementById('messagesToday');
+            
+            if (totalUsersEl) totalUsersEl.textContent = totalUsers || '0';
+            if (activeTrialsEl) activeTrialsEl.textContent = activeTrials || '0';
+            if (premiumUsersEl) premiumUsersEl.textContent = premiumUsers || '0';
+            if (messagesTodayEl) messagesTodayEl.textContent = messagesToday || '0';
+        } else {
+            console.error('Stats API returned error:', response.data);
         }
     } catch (error) {
         console.error('Failed to load stats:', error);
+        console.error('Error details:', error.response?.data);
     }
 };
 

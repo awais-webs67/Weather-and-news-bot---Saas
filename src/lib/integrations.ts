@@ -224,7 +224,8 @@ export class WeatherAPI {
             city: data.city.name,
             country: data.city.country,
             timezone: data.city.timezone,
-            forecast: data.list.slice(0, 8).map((item: any) => ({
+            // Return all available forecast data (up to 5 days / 40 intervals)
+            forecast: data.list.map((item: any) => ({
               time: item.dt_txt,
               timestamp: item.dt,
               temperature: item.main.temp,
