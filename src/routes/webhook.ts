@@ -61,11 +61,21 @@ Smart weather & news automation delivered right here! 🌟
 
 <b>📋 Available Commands:</b>
 
-🌤️ /weather - Get your local weather
-🌍 /checkweather - Check any city worldwide
-📰 /news - Get latest news headlines
-⚙️ /settings - View your settings
-❓ /help - Get help & usage guide
+<b>Weather:</b>
+🌤️ /weather - Your local weather
+🌍 /checkweather - Any city worldwide
+📅 /forecast - 7-day forecast
+🕐 /hourly - Hourly forecast
+📆 /tomorrow - Tomorrow's weather
+
+<b>News:</b>
+📰 /news - Top headlines
+🌎 /topnews - News by country
+🔍 /search - Search any topic
+
+<b>Settings:</b>
+⚙️ /settings - Your account settings
+❓ /help - Complete help guide
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -384,6 +394,239 @@ Smart weather & news automation delivered right here! 🌟
         await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
       }
     }
+    else if (text.startsWith('/today') || text.startsWith('/current')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
+      
+      if (weather.success && weather.data) {
+        const msg = formatWeatherMessage(weather.data, location.temperature_unit as string || 'C', location.language as string || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get weather: ${weather.error}`)
+      }
+    }
+    else if (text.startsWith('/hourly') || text.startsWith('/3hour')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const forecast = await weatherAPI.getForecast(location.city as string, location.country as string)
+      
+      if (forecast.success && forecast.data) {
+        let msg = `🕐 <b>Hourly Forecast for ${forecast.data.city}, ${forecast.data.country}</b>\n\n`
+        forecast.data.forecast.slice(0, 8).forEach((item: any, index: number) => {
+          const temp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
+          const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+          const time = new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          msg += `⏰ ${time}\n🌡️ ${temp}${unit} - ${item.description}\n\n`
+        })
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
+      }
+    }
+    else if (text.startsWith('/tomorrow')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const forecast = await weatherAPI.getForecast(location.city as string, location.country as string)
+      
+      if (forecast.success && forecast.data && forecast.data.forecast.length > 0) {
+        // Get tomorrow's forecast (skip first 8 items which are today)
+        const tomorrowForecast = forecast.data.forecast.slice(8, 16)
+        if (tomorrowForecast.length > 0) {
+          const avgTemp = tomorrowForecast.reduce((sum: number, item: any) => sum + item.temperature, 0) / tomorrowForecast.length
+          const temp = location.temperature_unit === 'F' ? (avgTemp * 9/5 + 32).toFixed(1) : avgTemp.toFixed(1)
+          const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+          
+          let msg = `📅 <b>Tomorrow's Weather</b>\n`
+          msg += `📍 ${forecast.data.city}, ${forecast.data.country}\n\n`
+          msg += `🌡️ Average: ${temp}${unit}\n\n`
+          msg += `<b>Throughout the day:</b>\n\n`
+          
+          tomorrowForecast.slice(0, 4).forEach((item: any) => {
+            const itemTemp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
+            const time = new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            msg += `⏰ ${time}: ${itemTemp}${unit} - ${item.description}\n`
+          })
+          
+          await bot.sendMessage(chatId, msg)
+        } else {
+          await bot.sendMessage(chatId, '⚠️ Tomorrow\'s forecast not available yet.')
+        }
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
+      }
+    }
+    else if (text.startsWith('/topnews ')) {
+      const countryQuery = text.replace('/topnews', '').trim()
+      
+      if (!countryQuery) {
+        const helpMsg = `
+╔══════════════════════════╗
+📰 <b>Top News by Country</b>
+╚══════════════════════════╝
+
+<b>Usage:</b>
+/topnews Country Name
+
+<b>Examples:</b>
+• /topnews United States
+• /topnews United Kingdom
+• /topnews India
+• /topnews Pakistan
+• /topnews Japan
+
+<i>Get breaking news from any country! 🌍</i>
+        `.trim()
+        await bot.sendMessage(chatId, helpMsg)
+        return c.json({ ok: true })
+      }
+      
+      // Try GNews first (supports all countries)
+      const gnewsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'gnews_api_key'"
+      ).first()
+      
+      if (gnewsSettings && gnewsSettings.setting_value) {
+        const gnewsAPI = new GNewsAPI(gnewsSettings.setting_value as string)
+        const newsResult = await gnewsAPI.getTopHeadlines(countryQuery)
+        
+        if (newsResult.success && newsResult.articles && newsResult.articles.length > 0) {
+          const msg = `📰 <b>Top News from ${countryQuery}</b>\n\n` + formatNewsMessage(newsResult.articles, user?.language || 'en')
+          await bot.sendMessage(chatId, msg)
+          return c.json({ ok: true })
+        }
+      }
+      
+      // Fallback to NewsAPI
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews(`${countryQuery} news`)
+      
+      if (searchResult.success && searchResult.articles) {
+        const msg = `📰 <b>Top News from ${countryQuery}</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Could not find news for ${countryQuery}.`)
+      }
+    }
+    else if (text.startsWith('/search ')) {
+      const query = text.replace('/search', '').trim()
+      
+      if (!query) {
+        const helpMsg = `
+╔══════════════════════════╗
+🔍 <b>Search News</b>
+╚══════════════════════════╝
+
+<b>Usage:</b>
+/search Your Search Query
+
+<b>Examples:</b>
+• /search technology
+• /search climate change
+• /search sports updates
+• /search stock market
+• /search artificial intelligence
+
+<i>Search any topic worldwide! 🌐</i>
+        `.trim()
+        await bot.sendMessage(chatId, helpMsg)
+        return c.json({ ok: true })
+      }
+      
+      const newsSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'news_api_key'"
+      ).first()
+      
+      if (!newsSettings || !newsSettings.setting_value) {
+        await bot.sendMessage(chatId, '📰 News service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const newsAPI = new NewsAPI(newsSettings.setting_value as string)
+      const searchResult = await newsAPI.searchNews(query)
+      
+      if (searchResult.success && searchResult.articles && searchResult.articles.length > 0) {
+        const msg = `🔍 <b>Search Results for "${query}"</b>\n\n` + formatNewsMessage(searchResult.articles, user?.language || 'en')
+        await bot.sendMessage(chatId, msg)
+      } else {
+        await bot.sendMessage(chatId, `⚠️ No results found for "${query}".`)
+      }
+    }
     else if (text.startsWith('/settings')) {
       if (!user) {
         await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
@@ -430,7 +673,7 @@ Smart weather & news automation delivered right here! 🌟
 
 <b>🌤️ Weather Commands:</b>
 
-/weather
+/weather or /today
 └ Get your local weather update
 
 /checkweather City Name
@@ -440,6 +683,12 @@ Smart weather & news automation delivered right here! 🌟
 /forecast or /7day
 └ Get 7-day weather forecast
 
+/hourly or /3hour
+└ Get hourly forecast (next 24hrs)
+
+/tomorrow
+└ Get tomorrow's weather forecast
+
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 <b>📰 News Commands:</b>
@@ -447,6 +696,18 @@ Smart weather & news automation delivered right here! 🌟
 /news
 └ Get today's top headlines
 └ News from your country
+
+/checknews Country Name
+└ Get news from any country
+└ Example: /checknews Pakistan
+
+/topnews Country Name
+└ Top breaking news by country
+└ Example: /topnews India
+
+/search Query
+└ Search news by topic or keyword
+└ Example: /search technology
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
