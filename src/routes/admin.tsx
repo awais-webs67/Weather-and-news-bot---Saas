@@ -197,6 +197,9 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
             </div>
             
             <div class="flex items-center space-x-4">
+                <a href="/admin/sales-stats" class="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold transition shadow-lg">
+                    <i class="fas fa-chart-line mr-2"></i>Sales Stats
+                </a>
                 <button onclick="refreshStats()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition">
                     <i class="fas fa-sync-alt mr-2"></i>Refresh
                 </button>
@@ -643,6 +646,282 @@ admin.get('/dashboard', adminAuthMiddleware, (c) => {
 
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script src="/static/admin-v5.js?v=5.0"></script>
+</body>
+</html>
+  `)
+})
+
+admin.get('/sales-stats', adminAuthMiddleware, (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Stats - AlertFlow Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-4xl font-bold text-white">
+                <i class="fas fa-chart-line text-blue-400 mr-3"></i>Sales Statistics
+            </h1>
+            <a href="/admin/dashboard" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-blue-500/20 p-3 rounded-lg">
+                        <i class="fas fa-users text-2xl text-blue-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="totalUsers">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Total Users</p>
+            </div>
+
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-500/20 p-3 rounded-lg">
+                        <i class="fas fa-crown text-2xl text-green-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="premiumUsers">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Premium Users</p>
+            </div>
+
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-500/20 p-3 rounded-lg">
+                        <i class="fas fa-clock text-2xl text-purple-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="activeTrials">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Active Trials</p>
+            </div>
+
+            <div class="stat-card card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-yellow-500/20 p-3 rounded-lg">
+                        <i class="fas fa-paper-plane text-2xl text-yellow-400"></i>
+                    </div>
+                </div>
+                <h3 class="text-3xl font-bold text-white mb-1" id="messagesToday">0</h3>
+                <p class="text-sm text-slate-400 font-medium">Messages Today</p>
+            </div>
+        </div>
+
+        <!-- Revenue & License Keys -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Revenue Chart -->
+            <div class="card rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">
+                    <i class="fas fa-dollar-sign text-green-400 mr-3"></i>Revenue Overview
+                </h2>
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+            <!-- User Growth Chart -->
+            <div class="card rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">
+                    <i class="fas fa-chart-area text-blue-400 mr-3"></i>User Growth
+                </h2>
+                <canvas id="userGrowthChart"></canvas>
+            </div>
+        </div>
+
+        <!-- License Keys Stats -->
+        <div class="card rounded-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-key text-yellow-400 mr-3"></i>License Keys Statistics
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-700/30 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-slate-300 font-medium">Total Generated</span>
+                        <i class="fas fa-certificate text-blue-400"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-white" id="totalKeys">0</p>
+                </div>
+                <div class="bg-slate-700/30 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-slate-300 font-medium">Used Keys</span>
+                        <i class="fas fa-check-circle text-green-400"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-white" id="usedKeys">0</p>
+                </div>
+                <div class="bg-slate-700/30 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-slate-300 font-medium">Available Keys</span>
+                        <i class="fas fa-hourglass-half text-yellow-400"></i>
+                    </div>
+                    <p class="text-3xl font-bold text-white" id="availableKeys">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card rounded-xl p-8">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-history text-purple-400 mr-3"></i>Recent Activity
+            </h2>
+            <div class="space-y-3" id="recentActivity">
+                <p class="text-slate-400">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script>
+        async function loadSalesStats() {
+            try {
+                // Load basic stats
+                const statsRes = await axios.get('/api/admin/stats');
+                if (statsRes.data.success) {
+                    const stats = statsRes.data.stats;
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                    document.getElementById('premiumUsers').textContent = stats.premiumUsers || 0;
+                    document.getElementById('activeTrials').textContent = stats.activeTrials || 0;
+                    document.getElementById('messagesToday').textContent = stats.messagesToday || 0;
+                }
+
+                // Load license keys stats
+                const keysRes = await axios.get('/api/admin/license-keys');
+                if (keysRes.data.success) {
+                    const keys = keysRes.data.keys;
+                    document.getElementById('totalKeys').textContent = keys.length;
+                    document.getElementById('usedKeys').textContent = keys.filter(k => k.is_used).length;
+                    document.getElementById('availableKeys').textContent = keys.filter(k => !k.is_used).length;
+                }
+
+                // Load users for charts
+                const usersRes = await axios.get('/api/admin/users');
+                if (usersRes.data.success) {
+                    renderCharts(usersRes.data.users);
+                }
+
+                // Load recent logs
+                const logsRes = await axios.get('/api/admin/logs');
+                if (logsRes.data.success) {
+                    renderRecentActivity(logsRes.data.logs.slice(0, 10));
+                }
+            } catch (error) {
+                console.error('Failed to load sales stats:', error);
+            }
+        }
+
+        function renderCharts(users) {
+            // Revenue Chart (dummy data for now)
+            const revenueCtx = document.getElementById('revenueChart');
+            new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [1200, 1900, 3000, 2500, 2700, 3200],
+                        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
+                    }
+                }
+            });
+
+            // User Growth Chart
+            const growthCtx = document.getElementById('userGrowthChart');
+            new Chart(growthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [users.filter(u => u.subscription_plan === 'free').length,
+                               users.filter(u => u.subscription_plan === 'trial').length,
+                               users.filter(u => u.subscription_plan === 'premium').length,
+                               users.length],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
+                    }
+                }
+            });
+        }
+
+        function renderRecentActivity(logs) {
+            const container = document.getElementById('recentActivity');
+            if (logs.length === 0) {
+                container.innerHTML = '<p class="text-slate-400">No recent activity</p>';
+                return;
+            }
+
+            container.innerHTML = logs.map(log => {
+                const time = new Date(log.created_at).toLocaleString();
+                const icon = log.success ? '<i class="fas fa-check-circle text-green-400"></i>' : '<i class="fas fa-times-circle text-red-400"></i>';
+                return \`
+                    <div class="flex items-center justify-between bg-slate-700/30 rounded-lg p-4">
+                        <div class="flex items-center space-x-3">
+                            \${icon}
+                            <div>
+                                <p class="text-white font-medium">\${log.api_name} - \${log.action}</p>
+                                <p class="text-xs text-slate-400">\${time}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-slate-400">\${log.details || ''}</span>
+                    </div>
+                \`;
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSalesStats);
+    </script>
 </body>
 </html>
   `)

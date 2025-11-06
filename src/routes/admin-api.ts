@@ -110,7 +110,7 @@ adminApi.get('/stats', adminAuthMiddleware, async (c) => {
       "SELECT COUNT(*) as count FROM users WHERE subscription_plan = 'premium' AND subscription_status = 'active'"
     ).first()
     const messagesToday = await c.env.DB.prepare(
-      "SELECT COUNT(*) as count FROM messages WHERE DATE(created_at) = DATE('now')"
+      "SELECT COUNT(*) as count FROM messages WHERE DATE(sent_at) = DATE('now', 'localtime')"
     ).first()
 
     return c.json({

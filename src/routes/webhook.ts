@@ -62,10 +62,11 @@ Smart weather & news automation delivered right here! 🌟
 <b>📋 Available Commands:</b>
 
 <b>🌤️ Weather Commands:</b>
-/weather - Your local weather
+/weather - Your local weather + AI advice
 /checkweather - Any city worldwide
-/forecast - 7-day forecast
-/hourly - Hourly forecast (24h)
+/6hour - Next 6-hour detailed forecast
+/forecast - 24-hour detailed forecast
+/hourly - Hourly forecast
 /tomorrow - Tomorrow's weather
 /wind - Wind speed & direction
 /humidity - Humidity & air details
@@ -204,7 +205,26 @@ Smart weather & news automation delivered right here! 🌟
       const weather = await weatherAPI.getCurrentWeather(location.city as string, location.country as string)
       
       if (weather.success && weather.data) {
-        const msg = formatWeatherMessage(weather.data, location.temperature_unit as string || 'C', location.language as string || 'en')
+        let msg = formatWeatherMessage(weather.data, location.temperature_unit as string || 'C', location.language as string || 'en')
+        
+        // Add Gemini AI precautions if API key is configured
+        const geminiSettings = await c.env.DB.prepare(
+          "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+        ).first()
+        
+        if (geminiSettings && geminiSettings.setting_value) {
+          const { GeminiAPI } = await import('../lib/integrations')
+          const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+          const advice = await gemini.analyzeWeatherAndProvideAdvice(
+            weather.data, 
+            `${location.city}, ${location.country}`
+          )
+          
+          if (advice.success && advice.advice) {
+            msg += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n🤖 <b>AI Safety Advisor:</b>\n\n${advice.advice}`
+          }
+        }
+        
         await bot.sendMessage(chatId, msg)
       } else {
         await bot.sendMessage(chatId, `⚠️ Failed to get weather: ${weather.error}`)
@@ -364,6 +384,71 @@ Smart weather & news automation delivered right here! 🌟
         await bot.sendMessage(chatId, `⚠️ Could not find news for ${countryQuery}. Try a different country name.`)
       }
     }
+    else if (text.startsWith('/6hour') || text.startsWith('/6hr')) {
+      if (!user) {
+        await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
+        return c.json({ ok: true })
+      }
+      
+      const location = await c.env.DB.prepare(
+        'SELECT * FROM locations WHERE user_id = ?'
+      ).bind(user.id).first()
+      
+      if (!location || !location.city) {
+        await bot.sendMessage(chatId, '⚠️ Please set your location first.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherSettings = await c.env.DB.prepare(
+        "SELECT setting_value FROM api_settings WHERE setting_key = 'weather_api_key'"
+      ).first()
+      
+      if (!weatherSettings || !weatherSettings.setting_value) {
+        await bot.sendMessage(chatId, '⚠️ Weather service not configured.')
+        return c.json({ ok: true })
+      }
+      
+      const weatherAPI = new WeatherAPI(weatherSettings.setting_value as string)
+      const forecast = await weatherAPI.getForecast(location.city as string, location.country as string)
+      
+      if (forecast.success && forecast.data) {
+        const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+        const next6Hours = forecast.data.forecast.slice(0, 2) // 6 hours (2 x 3-hour intervals)
+        
+        let msg = `
+╔══════════════════════════╗
+🌤️ <b>6-Hour Forecast</b>
+╚══════════════════════════╝
+
+📍 <b>${forecast.data.city}, ${forecast.data.country}</b>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+`
+        
+        next6Hours.forEach((item: any, index: number) => {
+          const temp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
+          const feelsLike = location.temperature_unit === 'F' ? (item.feels_like * 9/5 + 32).toFixed(1) : item.feels_like.toFixed(1)
+          const time = new Date(item.timestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          const rainChance = Math.round(item.pop * 100)
+          
+          msg += `
+⏰ <b>${time}</b>
+🌡️ Temp: ${temp}${unit} (feels ${feelsLike}${unit})
+☁️ ${item.description}
+💧 Humidity: ${item.humidity}%
+💨 Wind: ${item.wind_speed.toFixed(1)} m/s
+${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+`
+        })
+        
+        msg += `\n✨ <i>Plan ahead with confidence!</i>`
+        await bot.sendMessage(chatId, msg.trim())
+      } else {
+        await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
+      }
+    }
     else if (text.startsWith('/forecast') || text.startsWith('/7day')) {
       if (!user) {
         await bot.sendMessage(chatId, '⚠️ Please connect your account first.')
@@ -392,13 +477,42 @@ Smart weather & news automation delivered right here! 🌟
       const forecast = await weatherAPI.getForecast(location.city as string, location.country as string)
       
       if (forecast.success && forecast.data) {
-        let msg = `📅 <b>7-Day Forecast for ${forecast.data.city}, ${forecast.data.country}</b>\n\n`
-        forecast.data.forecast.forEach((item: any) => {
+        const unit = location.temperature_unit === 'F' ? '°F' : '°C'
+        
+        let msg = `
+╔══════════════════════════╗
+📅 <b>24-Hour Detailed Forecast</b>
+╚══════════════════════════╝
+
+📍 <b>${forecast.data.city}, ${forecast.data.country}</b>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+`
+        
+        forecast.data.forecast.forEach((item: any, index: number) => {
           const temp = location.temperature_unit === 'F' ? (item.temperature * 9/5 + 32).toFixed(1) : item.temperature.toFixed(1)
-          const unit = location.temperature_unit === 'F' ? '°F' : '°C'
-          msg += `📆 ${item.time}\n🌡️ ${temp}${unit} - ${item.description}\n\n`
+          const feelsLike = location.temperature_unit === 'F' ? (item.feels_like * 9/5 + 32).toFixed(1) : item.feels_like.toFixed(1)
+          const tempMin = location.temperature_unit === 'F' ? (item.temp_min * 9/5 + 32).toFixed(1) : item.temp_min.toFixed(1)
+          const tempMax = location.temperature_unit === 'F' ? (item.temp_max * 9/5 + 32).toFixed(1) : item.temp_max.toFixed(1)
+          const time = new Date(item.timestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+          const rainChance = Math.round(item.pop * 100)
+          const windDir = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(item.wind_deg / 45) % 8]
+          
+          msg += `
+⏰ <b>${time}</b>
+🌡️ ${temp}${unit} (${tempMin}-${tempMax}${unit})
+🤔 Feels: ${feelsLike}${unit}
+☁️ ${item.description}
+💧 Humidity: ${item.humidity}% | Pressure: ${item.pressure} hPa
+💨 Wind: ${item.wind_speed.toFixed(1)} m/s ${windDir}
+☁️ Clouds: ${item.clouds}%${rainChance > 0 ? `\n☔ Rain Chance: ${rainChance}%` : ''}${item.rain > 0 ? `\n🌧️ Rain: ${item.rain.toFixed(1)}mm` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+`
         })
-        await bot.sendMessage(chatId, msg)
+        
+        msg += `\n✨ <i>Stay prepared for the day ahead!</i>`
+        await bot.sendMessage(chatId, msg.trim())
       } else {
         await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
       }
@@ -1011,14 +1125,20 @@ Smart weather & news automation delivered right here! 🌟
 <b>🌤️ Weather Commands:</b>
 
 /weather or /today
-└ Get your local weather update
+└ Get your local weather with AI safety advice
+└ Includes temperature, conditions, and precautions
 
 /checkweather City Name
 └ Check weather anywhere worldwide
 └ Example: /checkweather Tokyo
 
+/6hour or /6hr ⭐ NEW
+└ Next 6-hour detailed forecast
+└ Perfect for planning your day
+
 /forecast or /7day
-└ Get 7-day weather forecast
+└ 24-hour detailed weather forecast
+└ Temperature, humidity, wind, rain chance
 
 /hourly or /3hour
 └ Get hourly forecast (next 24hrs)
@@ -1030,10 +1150,10 @@ Smart weather & news automation delivered right here! 🌟
 └ Wind speed and direction
 
 /humidity
-└ Humidity, pressure, visibility
+└ Humidity, pressure, air quality estimate
 
 /sunrise or /sunset
-└ Sun rise and set times
+└ Sun rise and set times with daylight duration
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 

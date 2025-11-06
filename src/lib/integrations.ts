@@ -223,11 +223,25 @@ export class WeatherAPI {
           data: {
             city: data.city.name,
             country: data.city.country,
+            timezone: data.city.timezone,
             forecast: data.list.slice(0, 8).map((item: any) => ({
               time: item.dt_txt,
+              timestamp: item.dt,
               temperature: item.main.temp,
+              temp_min: item.main.temp_min,
+              temp_max: item.main.temp_max,
+              feels_like: item.main.feels_like,
+              humidity: item.main.humidity,
+              pressure: item.main.pressure,
               description: item.weather[0].description,
-              icon: item.weather[0].icon
+              icon: item.weather[0].icon,
+              wind_speed: item.wind.speed,
+              wind_deg: item.wind.deg,
+              clouds: item.clouds.all,
+              visibility: item.visibility,
+              pop: item.pop || 0, // Probability of precipitation
+              rain: item.rain ? item.rain['3h'] || 0 : 0,
+              snow: item.snow ? item.snow['3h'] || 0 : 0
             }))
           }
         }
@@ -645,4 +659,89 @@ export function formatNewsMessage(articles: any[], language: string = 'en'): str
   
   message += `━━━━━━━━━━━━━━━━━━━━━━━━\n✨ <i>Powered by AlertFlow</i>`
   return message.trim()
+}
+
+// Gemini API for AI-powered weather analysis and precautions
+export class GeminiAPI {
+  private apiKey: string
+  
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
+  
+  async analyzeWeatherAndProvideAdvice(weatherData: any, locationName: string): Promise<{ success: boolean; advice?: string; error?: string }> {
+    try {
+      const prompt = `You are a weather safety advisor. Analyze the following weather conditions and provide personalized safety precautions and recommendations in 3-4 short bullet points. Be concise and practical.
+
+Location: ${locationName}
+Temperature: ${weatherData.temperature}°C (Feels like: ${weatherData.feels_like}°C)
+Condition: ${weatherData.description}
+Humidity: ${weatherData.humidity}%
+Wind Speed: ${weatherData.wind_speed} m/s
+Pressure: ${weatherData.pressure} hPa
+Air Quality Index (estimated): ${this.estimateAQI(weatherData)}
+
+Provide advice in this format:
+• [Safety tip 1]
+• [Health recommendation]
+• [Activity suggestion]
+• [Precaution if needed]
+
+Keep each point under 15 words. Focus on actionable advice.`
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 200
+            }
+          })
+        }
+      )
+      
+      const data = await response.json()
+      
+      if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        return {
+          success: true,
+          advice: data.candidates[0].content.parts[0].text.trim()
+        }
+      } else {
+        return {
+          success: false,
+          error: data.error?.message || 'Failed to generate advice'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      }
+    }
+  }
+  
+  private estimateAQI(weatherData: any): string {
+    // Estimate AQI based on humidity, wind, and visibility
+    const humidity = weatherData.humidity || 50
+    const windSpeed = weatherData.wind_speed || 5
+    const visibility = weatherData.visibility || 10000
+    
+    // Simple estimation logic
+    if (visibility > 8000 && windSpeed > 3 && humidity < 70) {
+      return 'Good (0-50)'
+    } else if (visibility > 5000 && windSpeed > 2) {
+      return 'Moderate (51-100)'
+    } else if (visibility > 3000) {
+      return 'Unhealthy for Sensitive Groups (101-150)'
+    } else {
+      return 'Unhealthy (151-200)'
+    }
+  }
 }
