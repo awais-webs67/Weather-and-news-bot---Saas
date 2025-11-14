@@ -795,6 +795,75 @@ Provide practical, actionable suggestions that can be implemented. Be specific a
   }
 })
 
+// Get sales statistics with real database data
+adminApi.get('/sales-stats', adminAuthMiddleware, async (c) => {
+  try {
+    // Get user growth by week (last 4 weeks)
+    const userGrowth = await c.env.DB.prepare(`
+      SELECT 
+        CASE 
+          WHEN julianday('now') - julianday(created_at) < 7 THEN 'Week 1'
+          WHEN julianday('now') - julianday(created_at) < 14 THEN 'Week 2'
+          WHEN julianday('now') - julianday(created_at) < 21 THEN 'Week 3'
+          ELSE 'Week 4'
+        END as week,
+        COUNT(*) as count
+      FROM users
+      WHERE julianday('now') - julianday(created_at) <= 28
+      GROUP BY week
+      ORDER BY 
+        CASE week
+          WHEN 'Week 1' THEN 1
+          WHEN 'Week 2' THEN 2
+          WHEN 'Week 3' THEN 3
+          WHEN 'Week 4' THEN 4
+        END
+    `).all()
+    
+    // Get messages sent by month (last 6 months)
+    const messagesByMonth = await c.env.DB.prepare(`
+      SELECT 
+        strftime('%Y-%m', sent_at) as month,
+        COUNT(*) as count
+      FROM messages
+      WHERE sent_at >= date('now', '-6 months')
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 6
+    `).all()
+    
+    // Get license key statistics
+    const licenseStats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_used = 1 THEN 1 ELSE 0 END) as used,
+        SUM(CASE WHEN is_used = 0 THEN 1 ELSE 0 END) as available
+      FROM license_keys
+    `).first()
+    
+    // Get recent activity (last 10 API logs)
+    const recentActivity = await c.env.DB.prepare(`
+      SELECT api_name, action, success, details, created_at
+      FROM api_logs
+      ORDER BY created_at DESC
+      LIMIT 10
+    `).all()
+    
+    return c.json({
+      success: true,
+      data: {
+        userGrowth: userGrowth.results || [],
+        messagesByMonth: messagesByMonth.results || [],
+        licenseStats: licenseStats || { total: 0, used: 0, available: 0 },
+        recentActivity: recentActivity.results || []
+      }
+    })
+  } catch (error) {
+    console.error('Sales stats error:', error)
+    return c.json({ error: 'Failed to load sales statistics' }, 500)
+  }
+})
+
 // Test WhatsApp API
 adminApi.post('/test/whatsapp', adminAuthMiddleware, async (c) => {
   try {

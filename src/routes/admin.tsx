@@ -744,10 +744,10 @@ admin.get('/sales-stats', adminAuthMiddleware, (c) => {
 
         <!-- Revenue & License Keys -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Revenue Chart -->
+            <!-- Messages Chart -->
             <div class="card rounded-xl p-8">
                 <h2 class="text-2xl font-bold text-white mb-6">
-                    <i class="fas fa-dollar-sign text-green-400 mr-3"></i>Revenue Overview
+                    <i class="fas fa-paper-plane text-green-400 mr-3"></i>Message Activity
                 </h2>
                 <canvas id="revenueChart"></canvas>
             </div>
@@ -816,41 +816,44 @@ admin.get('/sales-stats', adminAuthMiddleware, (c) => {
                     document.getElementById('messagesToday').textContent = stats.messagesToday || 0;
                 }
 
-                // Load license keys stats
-                const keysRes = await axios.get('/api/admin/license-keys');
-                if (keysRes.data.success) {
-                    const keys = keysRes.data.keys;
-                    document.getElementById('totalKeys').textContent = keys.length;
-                    document.getElementById('usedKeys').textContent = keys.filter(k => k.is_used).length;
-                    document.getElementById('availableKeys').textContent = keys.filter(k => !k.is_used).length;
-                }
-
-                // Load users for charts
-                const usersRes = await axios.get('/api/admin/users');
-                if (usersRes.data.success) {
-                    renderCharts(usersRes.data.users);
-                }
-
-                // Load recent logs
-                const logsRes = await axios.get('/api/admin/logs');
-                if (logsRes.data.success) {
-                    renderRecentActivity(logsRes.data.logs.slice(0, 10));
+                // Load sales statistics with REAL database data
+                const salesRes = await axios.get('/api/admin/sales-stats');
+                if (salesRes.data.success) {
+                    const salesData = salesRes.data.data;
+                    
+                    // Update license keys stats
+                    document.getElementById('totalKeys').textContent = salesData.licenseStats.total || 0;
+                    document.getElementById('usedKeys').textContent = salesData.licenseStats.used || 0;
+                    document.getElementById('availableKeys').textContent = salesData.licenseStats.available || 0;
+                    
+                    // Render charts with real data
+                    renderCharts(salesData);
+                    
+                    // Render recent activity
+                    renderRecentActivity(salesData.recentActivity);
                 }
             } catch (error) {
                 console.error('Failed to load sales stats:', error);
             }
         }
 
-        function renderCharts(users) {
-            // Revenue Chart (dummy data for now)
+        function renderCharts(salesData) {
+            // Messages by Month Chart (Real Data from messages table)
+            const messagesByMonth = salesData.messagesByMonth || [];
+            const monthLabels = messagesByMonth.map(m => {
+                const date = new Date(m.month + '-01');
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            }).reverse();
+            const messageData = messagesByMonth.map(m => m.count).reverse();
+            
             const revenueCtx = document.getElementById('revenueChart');
             new Chart(revenueCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: monthLabels.length > 0 ? monthLabels : ['No Data'],
                     datasets: [{
-                        label: 'Revenue ($)',
-                        data: [1200, 1900, 3000, 2500, 2700, 3200],
+                        label: 'Messages Sent',
+                        data: messageData.length > 0 ? messageData : [0],
                         backgroundColor: 'rgba(34, 197, 94, 0.5)',
                         borderColor: 'rgba(34, 197, 94, 1)',
                         borderWidth: 2
@@ -858,7 +861,10 @@ admin.get('/sales-stats', adminAuthMiddleware, (c) => {
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    plugins: { 
+                        legend: { labels: { color: '#f1f5f9' } },
+                        title: { display: true, text: 'Message Activity (Last 6 Months)', color: '#f1f5f9' }
+                    },
                     scales: {
                         y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
                         x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
@@ -866,29 +872,47 @@ admin.get('/sales-stats', adminAuthMiddleware, (c) => {
                 }
             });
 
-            // User Growth Chart
+            // User Growth Chart (Real Data from users table)
+            const userGrowth = salesData.userGrowth || [];
+            
+            // Create week labels and data arrays
+            const weekLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            const weekData = [0, 0, 0, 0];
+            
+            userGrowth.forEach(item => {
+                const weekIndex = weekLabels.indexOf(item.week);
+                if (weekIndex !== -1) {
+                    weekData[weekIndex] = item.count;
+                }
+            });
+            
             const growthCtx = document.getElementById('userGrowthChart');
             new Chart(growthCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    labels: weekLabels,
                     datasets: [{
                         label: 'New Users',
-                        data: [users.filter(u => u.subscription_plan === 'free').length,
-                               users.filter(u => u.subscription_plan === 'trial').length,
-                               users.filter(u => u.subscription_plan === 'premium').length,
-                               users.length],
+                        data: weekData,
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         borderColor: 'rgba(59, 130, 246, 1)',
                         borderWidth: 2,
-                        fill: true
+                        fill: true,
+                        tension: 0.4
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    plugins: { 
+                        legend: { labels: { color: '#f1f5f9' } },
+                        title: { display: true, text: 'User Growth (Last 4 Weeks)', color: '#f1f5f9' }
+                    },
                     scales: {
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                        y: { 
+                            ticks: { color: '#94a3b8', stepSize: 1 }, 
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                            beginAtZero: true
+                        },
                         x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } }
                     }
                 }

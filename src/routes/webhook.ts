@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Bindings } from '../types'
-import { TelegramBot, WeatherAPI, NewsAPI, GNewsAPI, formatWeatherMessage, formatNewsMessage } from '../lib/integrations'
+import { TelegramBot, WeatherAPI, NewsAPI, GNewsAPI, formatWeatherMessage, formatNewsMessage, calculateAQI, GeminiAPI } from '../lib/integrations'
 
 const webhook = new Hono<{ Bindings: Bindings }>()
 
@@ -169,7 +169,25 @@ Smart weather & news automation delivered right here! 🌟
           }
         }
         
-        const msg = formatWeatherMessage(weather.data, tempUnit, user ? 'en' : 'en')
+        let msg = formatWeatherMessage(weather.data, tempUnit, user ? 'en' : 'en')
+        
+        // Add Gemini AI precautions if API key is configured
+        const geminiSettings = await c.env.DB.prepare(
+          "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+        ).first()
+        
+        if (geminiSettings && geminiSettings.setting_value) {
+          const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+          const advice = await gemini.analyzeWeatherAndProvideAdvice(
+            weather.data, 
+            `${city}, ${country || ''}`
+          )
+          
+          if (advice.success && advice.advice) {
+            msg += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n🤖 <b>AI Safety Advisor:</b>\n\n${advice.advice}`
+          }
+        }
+        
         await bot.sendMessage(chatId, msg)
       } else {
         await bot.sendMessage(chatId, `⚠️ <b>City Not Found</b>\n\nCouldn't find weather for "${cityQuery}".\n\nPlease check:\n• City name spelling\n• Try adding country name\n• Use English city names`)
@@ -213,7 +231,6 @@ Smart weather & news automation delivered right here! 🌟
         ).first()
         
         if (geminiSettings && geminiSettings.setting_value) {
-          const { GeminiAPI } = await import('../lib/integrations')
           const gemini = new GeminiAPI(geminiSettings.setting_value as string)
           const advice = await gemini.analyzeWeatherAndProvideAdvice(
             weather.data, 
@@ -443,6 +460,28 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
 `
         })
         
+        // Add Gemini AI recommendations if available
+        const geminiSettings = await c.env.DB.prepare(
+          "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+        ).first()
+        
+        if (geminiSettings && geminiSettings.setting_value) {
+          try {
+            const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+            const firstInterval = next6Hours[0]
+            const advice = await gemini.analyzeWeatherAndProvideAdvice(
+              firstInterval,
+              `${forecast.data.city}, ${forecast.data.country}`
+            )
+            
+            if (advice.success && advice.advice) {
+              msg += `\n🤖 <b>AI Weather Advisor:</b>\n\n${advice.advice}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n`
+            }
+          } catch (error) {
+            console.log('Gemini AI not available')
+          }
+        }
+        
         msg += `\n✨ <i>Plan ahead with confidence!</i>`
         await bot.sendMessage(chatId, msg.trim())
       } else {
@@ -492,7 +531,7 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
         
         let msg = `
 ╔══════════════════════════╗
-📅 <b>5-Day Weather Forecast</b>
+📅 <b>7-Day Weather Forecast</b>
 ╚══════════════════════════╝
 
 📍 <b>${forecast.data.city}, ${forecast.data.country}</b>
@@ -500,8 +539,8 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 `
         
-        // Process each day
-        Object.keys(dayGroups).slice(0, 5).forEach((dayKey, index) => {
+        // Process each day - SHOW 7 DAYS
+        Object.keys(dayGroups).slice(0, 7).forEach((dayKey, index) => {
           const dayData = dayGroups[dayKey]
           
           // Calculate day statistics
@@ -512,6 +551,7 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
           const avgHumidity = Math.round(dayData.reduce((sum: number, d: any) => sum + d.humidity, 0) / dayData.length)
           const maxRainChance = Math.max(...dayData.map((d: any) => d.pop)) * 100
           const avgWindSpeed = dayData.reduce((sum: number, d: any) => sum + d.wind_speed, 0) / dayData.length
+          const avgVisibility = dayData.reduce((sum: number, d: any) => sum + (d.visibility || 10000), 0) / dayData.length
           
           // Most common condition
           const conditions = dayData.map((d: any) => d.description)
@@ -519,11 +559,12 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
             conditions.filter((v: string) => v === a).length - conditions.filter((v: string) => v === b).length
           ).pop()
           
-          // Estimate AQI based on visibility and humidity
-          const avgVisibility = dayData.reduce((sum: number, d: any) => sum + (d.visibility || 10000), 0) / dayData.length
-          let aqi = 'Good'
-          if (avgVisibility < 3000 || avgHumidity > 80) aqi = 'Moderate'
-          if (avgVisibility < 2000) aqi = 'Unhealthy'
+          // Calculate AQI with NUMBER + LABEL format
+          const aqiData = calculateAQI({
+            humidity: avgHumidity,
+            wind_speed: avgWindSpeed,
+            visibility: avgVisibility
+          })
           
           const tempAvg = location.temperature_unit === 'F' ? (avgTemp * 9/5 + 32).toFixed(1) : avgTemp.toFixed(1)
           const tempMin = location.temperature_unit === 'F' ? (minTemp * 9/5 + 32).toFixed(1) : minTemp.toFixed(1)
@@ -536,7 +577,7 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
 💧 Humidity: ${avgHumidity}%
 💨 Wind: ${avgWindSpeed.toFixed(1)} m/s
 ☔ Rain: ${Math.round(maxRainChance)}%
-🌫️ Air Quality: ${aqi}
+🌫️ Air Quality: ${aqiData.full}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 `
@@ -549,7 +590,6 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
         
         if (geminiSettings && geminiSettings.setting_value) {
           try {
-            const { GeminiAPI } = await import('../lib/integrations')
             const gemini = new GeminiAPI(geminiSettings.setting_value as string)
             
             // Use first day data for AI analysis
@@ -652,6 +692,29 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
           const time = new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
           msg += `⏰ ${time}\n🌡️ ${temp}${unit} - ${item.description}\n\n`
         })
+        
+        // Add Gemini AI recommendations if available
+        const geminiSettings = await c.env.DB.prepare(
+          "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+        ).first()
+        
+        if (geminiSettings && geminiSettings.setting_value) {
+          try {
+            const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+            const firstInterval = forecast.data.forecast[0]
+            const advice = await gemini.analyzeWeatherAndProvideAdvice(
+              firstInterval,
+              `${forecast.data.city}, ${forecast.data.country}`
+            )
+            
+            if (advice.success && advice.advice) {
+              msg += `\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n🤖 <b>AI Weather Advisor:</b>\n\n${advice.advice}`
+            }
+          } catch (error) {
+            console.log('Gemini AI not available')
+          }
+        }
+        
         await bot.sendMessage(chatId, msg)
       } else {
         await bot.sendMessage(chatId, `⚠️ Failed to get forecast: ${forecast.error}`)
@@ -702,6 +765,28 @@ ${rainChance > 0 ? `☔ Rain: ${rainChance}%` : ''}
             const time = new Date(item.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
             msg += `⏰ ${time}: ${itemTemp}${unit} - ${item.description}\n`
           })
+          
+          // Add Gemini AI recommendations if available
+          const geminiSettings = await c.env.DB.prepare(
+            "SELECT setting_value FROM api_settings WHERE setting_key = 'gemini_api_key'"
+          ).first()
+          
+          if (geminiSettings && geminiSettings.setting_value) {
+            try {
+              const gemini = new GeminiAPI(geminiSettings.setting_value as string)
+              const firstInterval = tomorrowForecast[0]
+              const advice = await gemini.analyzeWeatherAndProvideAdvice(
+                firstInterval,
+                `${forecast.data.city}, ${forecast.data.country}`
+              )
+              
+              if (advice.success && advice.advice) {
+                msg += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n🤖 <b>AI Weather Advisor:</b>\n\n${advice.advice}`
+              }
+            } catch (error) {
+              console.log('Gemini AI not available')
+            }
+          }
           
           await bot.sendMessage(chatId, msg)
         } else {

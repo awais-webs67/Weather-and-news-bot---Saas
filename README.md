@@ -1,758 +1,737 @@
-# WeatherNews Alert SaaS
+# 🌤️ AlertFlow - Smart Weather & News Automation Bot
 
-## 🎉 ADMIN PANEL COMPLETELY REWRITTEN! (2025-11-05 Final)
+> **AI-Powered Telegram bot delivering automated weather forecasts and curated news summaries with intelligent safety recommendations.**
 
-### ✨ **NEW PROFESSIONAL ADMIN PANEL v4.0**
-
-**Complete rewrite with modern UI and all features working:**
-
-✅ **Modern Purple Gradient Design** - Professional glass morphism UI  
-✅ **All API Save Functions Fixed** - Telegram, Weather, News, GNews, Gemini working  
-✅ **Complete User Management** - Add, Edit, Delete users with modal interface  
-✅ **External JavaScript** - No more template literal issues  
-✅ **Backend CRUD Endpoints** - Full user management API added  
-✅ **Toast Notifications** - Beautiful feedback system  
-✅ **Spinner Animations** - Loading states for all API tests  
-✅ **No Version Banner** - Clean professional look as requested  
-
-### 🚀 **FULLY WORKING FEATURES:**
-✅ **Admin Login** (admin/admin123)  
-✅ **Stats Dashboard** (Total users, trials, premium, messages)  
-✅ **API Configuration** (5 APIs: Telegram, Weather, News, GNews, Gemini)  
-✅ **API Testing** (Test buttons with loading spinners)  
-✅ **User Management** (Add, Edit, Delete with modal)  
-✅ **API Logs** (Real-time monitoring)  
-✅ **WhatsApp Toggle** (Enable/disable)  
-
-### 🎨 **NEW UI FEATURES:**
-- Purple/blue gradient background (#667eea to #764ba2)
-- Glass effect cards with backdrop blur
-- Smooth hover animations
-- Modern stat cards with gradient icons
-- Professional modal dialogs
-- Responsive design for all devices
-
-### 📋 **Quick Test:**
-1. Visit: https://3000-ifo5w1bpg047qfgq372y5-2e77fc33.sandbox.novita.ai/admin
-2. Login: `admin` / `admin123`
-3. Try all features:
-   - Test API buttons (with spinners!)
-   - Save API keys (working!)
-   - Add/Edit/Delete users (fully functional!)
-   - View stats and logs
+[![Deploy to Cloudflare](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-orange?style=for-the-badge&logo=cloudflare)](https://pages.cloudflare.com)
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-blue?style=for-the-badge&logo=telegram)](https://telegram.org/blog/bot-revolution)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ---
 
-## 🌤️ Project Overview
+## 📋 Table of Contents
 
-A complete, modern SaaS web application that delivers **daily weather updates and local news summaries** directly to users via **Telegram or WhatsApp**. Built with cutting-edge serverless technology for global reach and blazing-fast performance.
-
-### Key Features
-- **Automated Weather Updates** - Morning and evening forecasts delivered automatically
-- **Daily News Summaries** - Curated local and national news delivered daily
-- **Multi-Channel Support** - Telegram (active) and WhatsApp (ready to activate)
-- **Multi-Language** - English and Urdu support with more languages coming
-- **Smart Scheduling** - Users control when they receive updates
-- **3-Day Free Trial** - No credit card required
-- **Admin Panel** - Complete system control for non-technical users
-- **Responsive Design** - Beautiful UI that works on all devices
-
----
-
-## 🚀 Live URLs
-
-### Public Website
-**🔗 Main Application**: https://3000-ifo5w1bpg047qfgq372y5-2e77fc33.sandbox.novita.ai
-
-### User Access Points
-- **Landing Page**: `/`
-- **Sign Up**: `/auth/signup`
-- **Login**: `/auth/login`
-- **Dashboard**: `/dashboard` (requires login)
-
-### Admin Access
-- **Admin Panel**: `/admin`
-- Configure API keys, enable/disable WhatsApp, manage users
-
-### API Endpoints
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User authentication
-- `GET /api/user/profile` - Get user data
-- `POST /api/user/preferences` - Update location & channel settings
-- `POST /api/user/schedules` - Update notification schedule
-- `GET /api/weather/:city` - Get weather data (placeholder)
-- `GET /api/news/:country` - Get news feed (placeholder)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Quick Start](#-quick-start)
+- [Local Development Setup](#-local-development-setup)
+- [Deployment to Cloudflare Pages](#-deployment-to-cloudflare-pages)
+- [Configuration](#-configuration)
+- [Database Setup](#-database-setup)
+- [API Integrations](#-api-integrations)
+- [Bot Commands](#-bot-commands)
+- [Project Structure](#-project-structure)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
 
 ---
 
-## 📊 Data Architecture
+## ✨ Features
 
-### Database: Cloudflare D1 (SQLite)
-The application uses a robust relational database structure:
+### 🌤️ Weather Intelligence
+- **Real-time weather updates** with OpenWeatherMap API
+- **7-day detailed forecasts** with temperature, humidity, wind, and rain probability
+- **AI-powered safety recommendations** using Google Gemini AI
+- **Air Quality Index (AQI)** with numeric values and descriptive labels (0-500 scale)
+- **6-hour, hourly, and tomorrow forecasts** for precise planning
+- **Multi-city support** - check weather anywhere in the world
 
-#### Core Tables
-1. **users** - User accounts with authentication
-   - Email/password authentication
-   - Trial & subscription tracking
-   - Telegram/WhatsApp connection info
+### 📰 News Automation
+- **Curated news summaries** from NewsAPI and GNews
+- **Country-specific headlines** with worldwide coverage
+- **Category filtering** (Sports, Tech, Business, Entertainment, Health, Science)
+- **Search functionality** for any topic or keyword
+- **Multi-language support** (English/Urdu)
 
-2. **locations** - User location preferences
-   - Country, city, timezone
-   - Language preference (English/Urdu)
-   - Temperature units (°C/°F)
+### 🤖 AI-Powered Features
+- **Gemini AI safety advisor** provides personalized weather precautions
+- **Smart recommendations** based on temperature, humidity, wind, and AQI
+- **3-4 bullet point advice** with actionable tips for daily planning
 
-3. **schedules** - Notification timing
-   - Morning weather (default: 07:00)
-   - Evening weather (default: 20:00)
-   - Daily news (default: 09:00)
-
-4. **messages** - Message delivery log
-   - Tracks all sent messages
-   - Success/failure status
-   - Error logging
-
-5. **news_items** - News cache
-   - Country/city-specific news
-   - Title, summary, URL, source
-
-6. **api_settings** - System configuration
-   - API keys storage
-   - WhatsApp enable/disable toggle
-   - Trial duration settings
-
-7. **weather_cache** - Weather data cache
-   - Reduces API costs
-   - Stores recent weather data by city
-
-8. **subscription_plans** - Available plans
-   - Free Trial (3 days)
-   - Monthly Premium ($9.99)
-   - Yearly Premium ($95.99)
-
-### Storage Strategy
-- **D1 Database** - All relational data (users, preferences, logs)
-- **Server-side caching** - Weather and news data to reduce API calls
-- **Session cookies** - User authentication (7-day expiry)
-
----
-
-## 🎯 Current Features (Completed)
-
-### ✅ Authentication System
-- Email/password registration with validation
-- Secure password hashing (SHA-256)
-- Session-based authentication
-- Automatic 3-day trial activation
-
-### ✅ User Dashboard
-- Profile management
-- Channel selection (Telegram/WhatsApp)
-- Location & language preferences
-- Custom notification schedule
-- Trial status tracking
-
-### ✅ Admin Panel
-- System statistics dashboard
-- WhatsApp enable/disable toggle
-- API key management (Telegram, WhatsApp, Weather)
-- User management table
-- Real-time stats refresh
-
-### ✅ Database & Backend
-- Complete D1 database schema
-- RESTful API endpoints
-- User preferences storage
-- Schedule management
-- Message logging system
-
-### ✅ UI/UX Design
-- Modern landing page with hero section
-- Responsive design (mobile-first)
-- Feature showcase cards
-- Pricing comparison table
-- Professional color scheme (purple gradient)
-
----
-
-## 🔜 Features Not Yet Implemented
-
-### 🔨 Integration Phase (Next Priority)
-
-1. **Weather API Integration**
-   - Connect to OpenWeatherMap or WeatherAPI
-   - Implement real-time weather fetching
-   - Set up weather data caching
-   - Format weather messages for delivery
-
-2. **News RSS Integration**
-   - Connect to news RSS feeds
-   - Implement news fetching & parsing
-   - Deduplicate news items
-   - Generate daily news summaries
-
-3. **Telegram Bot**
-   - Create Telegram bot via BotFather
-   - Implement webhook handling
-   - Command system (/start, /now, /today, /news, etc.)
-   - Message formatting and delivery
-
-4. **WhatsApp Cloud API**
-   - Meta Business integration
-   - Webhook setup
-   - Message template creation
-   - Delivery system (when enabled by admin)
-
-### 🚀 Automation Phase
-
-5. **Scheduled Message Delivery**
-   - Cloudflare Cron Triggers setup
-   - Schedule processing logic
-   - Batch message sending
-   - Retry logic for failed messages
-
-6. **User Commands**
-   - `/start` - Welcome message
-   - `/now` - Current weather
-   - `/today` - Today's forecast
-   - `/hourly` - Hourly forecast
-   - `/week` - Weekly forecast
-   - `/news` - Latest news
-   - `/settings` - Update preferences
-   - `/stop` - Unsubscribe
-
-### 💳 Monetization Phase
-
-7. **Payment Integration**
-   - Stripe payment gateway
-   - Subscription upgrade flow
-   - Payment webhook handling
-   - Trial expiry enforcement
-
-8. **Subscription Management**
-   - Auto-renewal system
-   - Plan upgrade/downgrade
-   - Cancellation flow
-   - Grace period handling
+### 💼 SaaS Features
+- **User authentication** with secure password hashing
+- **Subscription management** (Free, Trial, Premium plans)
+- **License key system** for premium access
+- **Admin dashboard** with comprehensive management tools
+- **Sales statistics** with real-time database analytics
+- **Scheduled notifications** via Cloudflare Cron triggers
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Hono** - Fast, lightweight web framework
-- **TypeScript** - Type-safe development
-- **Cloudflare D1** - Serverless SQLite database
-- **Cloudflare Workers** - Edge runtime (serverless)
-
-### Frontend
-- **TailwindCSS** - Utility-first CSS via CDN
-- **Font Awesome** - Icon library
-- **Axios** - HTTP client
-- **Vanilla JavaScript** - No heavy frameworks
-
-### Deployment
-- **Platform**: Cloudflare Pages
-- **Edge Network**: Global CDN
-- **Database**: Cloudflare D1 (SQLite)
-- **Development**: Local with Wrangler CLI
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Hono (TypeScript) |
+| **Runtime** | Cloudflare Workers |
+| **Database** | Cloudflare D1 (SQLite) |
+| **Frontend** | HTML, TailwindCSS, Vanilla JavaScript |
+| **Build Tool** | Vite |
+| **APIs** | Telegram Bot API, OpenWeatherMap, NewsAPI, GNews, Google Gemini AI |
+| **Deployment** | Cloudflare Pages |
+| **Process Manager** | PM2 (local development) |
 
 ---
 
-## 📝 User Guide
-
-### For End Users
-
-1. **Sign Up**
-   - Visit the website
-   - Click "Start Free Trial"
-   - Enter name, email, password
-   - Get 3 days free access
-
-2. **Setup Your Preferences**
-   - Choose Telegram or WhatsApp
-   - Enter your city & country
-   - Select language (English/Urdu)
-   - Choose temperature unit (°C/°F)
-
-3. **Set Your Schedule**
-   - Enable/disable morning weather
-   - Enable/disable evening weather
-   - Enable/disable daily news
-   - Choose delivery times
-
-4. **Connect Telegram**
-   - Start chat with @WeatherNewsBot
-   - Type `/start`
-   - Updates will arrive automatically
-
-### For Administrators
-
-1. **Access Admin Panel**
-   - Visit `/admin`
-   - View system statistics
-
-2. **Configure API Keys**
-   - Enter Telegram Bot Token
-   - Enter Weather API Key
-   - (Optional) WhatsApp credentials
-
-3. **Enable WhatsApp**
-   - Toggle WhatsApp switch when ready
-   - Ensure API credentials are saved first
-
-4. **Manage Users**
-   - View all registered users
-   - Monitor subscription status
-   - Track message delivery
-
----
-
-## 🔧 Development Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- npm or pnpm
-- Cloudflare account (for production)
 
-### Local Development
+- **Node.js** 18+ installed
+- **npm** or **pnpm** package manager
+- **Cloudflare account** (free tier works)
+- **Telegram Bot Token** (get from [@BotFather](https://t.me/botfather))
+- **API Keys**:
+  - OpenWeatherMap API key
+  - NewsAPI or GNews API key
+  - Google Gemini API key (optional, for AI features)
+
+### 1️⃣ Clone Repository
 
 ```bash
-# Install dependencies
-npm install
+git clone https://github.com/awais-webs67/Weather-and-news-bot---Saas.git
+cd Weather-and-news-bot---Saas
+```
 
-# Apply database migrations
+### 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Setup Database
+
+```bash
+# Create local database and run migrations
 npm run db:migrate:local
 
+# Seed with initial data (optional)
+npm run db:seed
+```
+
+### 4️⃣ Configure Environment
+
+Create `.dev.vars` file in project root:
+
+```env
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# Weather API
+OPENWEATHERMAP_API_KEY=your_weather_api_key
+
+# News APIs
+NEWS_API_KEY=your_newsapi_key
+GNEWS_API_KEY=your_gnews_key
+
+# AI (Optional)
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+### 5️⃣ Start Development Server
+
+```bash
+# Build first
+npm run build
+
+# Start with PM2
+pm2 start ecosystem.config.cjs
+
+# Or use npm script
+npm run dev:sandbox
+```
+
+### 6️⃣ Access Application
+
+- **Frontend**: http://localhost:3000
+- **Admin Panel**: http://localhost:3000/admin
+- **User Dashboard**: http://localhost:3000/dashboard
+
+**Default Admin Credentials**:
+- Username: `admin`
+- Password: `admin123`
+
+---
+
+## 💻 Local Development Setup
+
+### Step-by-Step Guide
+
+#### 1. Install Node.js and npm
+
+```bash
+# Check if installed
+node --version  # Should be 18+
+npm --version
+
+# Install if needed (Ubuntu/Debian)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+#### 2. Clone and Install
+
+```bash
+git clone https://github.com/awais-webs67/Weather-and-news-bot---Saas.git
+cd Weather-and-news-bot---Saas
+npm install
+```
+
+#### 3. Install PM2 Globally (Recommended)
+
+```bash
+npm install -g pm2
+```
+
+#### 4. Setup Database
+
+```bash
+# Initialize local D1 database
+npx wrangler d1 migrations apply webapp-production --local
+
+# Optional: Add test data
+npm run db:seed
+```
+
+#### 5. Configure API Keys
+
+Create `.dev.vars`:
+
+```env
+TELEGRAM_BOT_TOKEN=7123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OPENWEATHERMAP_API_KEY=abcd1234efgh5678ijkl9012mnop3456
+NEWS_API_KEY=newsapi_key_here
+GEMINI_API_KEY=AIzaSyD...
+```
+
+#### 6. Build and Start
+
+```bash
+# Build project
+npm run build
+
+# Clean port if needed
+npm run clean-port
+
+# Start with PM2
+pm2 start ecosystem.config.cjs
+
+# Check logs
+pm2 logs webapp --nostream
+
+# Check status
+pm2 list
+```
+
+#### 7. Configure Admin Panel
+
+1. Open http://localhost:3000/admin
+2. Login with default credentials
+3. Navigate to API Configuration section
+4. Add your API keys:
+   - Telegram Bot Token
+   - Weather API Key
+   - News API Key (NewsAPI or GNews)
+   - Gemini AI Key (optional)
+5. Click **Test** button for each to verify
+6. Click **Save** to store in database
+
+#### 8. Setup Telegram Bot Webhook
+
+```bash
+# Get your public URL (if using ngrok or similar)
+# Then set webhook
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-domain.com/webhook/telegram"}'
+```
+
+For local testing, use ngrok:
+```bash
+ngrok http 3000
+# Use the https URL for webhook
+```
+
+---
+
+## 🌐 Deployment to Cloudflare Pages
+
+### Step-by-Step Deployment Guide
+
+#### 1. Install Wrangler CLI
+
+```bash
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+```
+
+#### 2. Create Cloudflare D1 Database
+
+```bash
+# Create production database
+wrangler d1 create webapp-production
+
+# Copy the database_id from output
+# Update wrangler.jsonc with the database_id
+```
+
+#### 3. Update wrangler.jsonc
+
+```jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "alertflow",
+  "compatibility_date": "2024-01-01",
+  "pages_build_output_dir": "./dist",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "webapp-production",
+      "database_id": "YOUR_DATABASE_ID_HERE"  // ← Paste your database ID
+    }
+  ]
+}
+```
+
+#### 4. Run Migrations on Production Database
+
+```bash
+# Apply migrations to production
+wrangler d1 migrations apply webapp-production
+```
+
+#### 5. Create Cloudflare Pages Project
+
+```bash
 # Build the project
 npm run build
 
-# Start development server
-npm run dev:sandbox
-
-# Or use PM2 for daemon mode
-pm2 start ecosystem.config.cjs
-
-# View logs
-pm2 logs webapp --nostream
+# Create Pages project
+wrangler pages project create alertflow --production-branch main
 ```
 
-### Database Commands
+#### 6. Deploy to Cloudflare Pages
 
 ```bash
-# Apply migrations locally
+# Deploy
+npm run deploy
+
+# Or deploy with custom project name
+npm run deploy:prod
+```
+
+#### 7. Set Production Environment Variables
+
+```bash
+# Add secrets (one at a time)
+wrangler pages secret put TELEGRAM_BOT_TOKEN --project-name alertflow
+wrangler pages secret put OPENWEATHERMAP_API_KEY --project-name alertflow
+wrangler pages secret put NEWS_API_KEY --project-name alertflow
+wrangler pages secret put GEMINI_API_KEY --project-name alertflow
+```
+
+#### 8. Configure Telegram Webhook for Production
+
+```bash
+# Set webhook to your Cloudflare Pages URL
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://alertflow.pages.dev/webhook/telegram"}'
+```
+
+#### 9. Verify Deployment
+
+- Visit: `https://alertflow.pages.dev`
+- Login to admin panel: `https://alertflow.pages.dev/admin`
+- Test bot commands in Telegram
+- Check Cloudflare dashboard for logs
+
+---
+
+## ⚙️ Configuration
+
+### package.json Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "dev:sandbox": "wrangler pages dev dist --ip 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply webapp-production",
+    "db:seed": "wrangler d1 execute webapp-production --local --file=./seed.sql",
+    "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local && npm run db:seed",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
+  }
+}
+```
+
+### PM2 Configuration (ecosystem.config.cjs)
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'webapp',
+      script: 'npx',
+      args: 'wrangler pages dev dist --ip 0.0.0.0 --port 3000',
+      env: {
+        NODE_ENV: 'development',
+        PORT: 3000
+      },
+      watch: false,
+      instances: 1,
+      exec_mode: 'fork'
+    }
+  ]
+}
+```
+
+---
+
+## 🗄️ Database Setup
+
+### Database Schema
+
+The project uses **Cloudflare D1** (SQLite-based) with the following main tables:
+
+- **users** - User accounts and authentication
+- **locations** - User location preferences
+- **schedules** - Notification schedules
+- **messages** - Message delivery logs
+- **license_keys** - Premium subscription keys
+- **api_settings** - API configuration and keys
+- **api_logs** - API usage logs
+- **admin_users** - Admin authentication
+
+### Migration Commands
+
+```bash
+# Local development
 npm run db:migrate:local
 
-# Apply migrations to production
+# Production
 npm run db:migrate:prod
 
-# Execute SQL query (local)
-npm run db:console:local -- --command="SELECT * FROM users"
+# Reset local database (CAUTION: Deletes all data)
+npm run db:reset
+```
 
-# Execute SQL query (production)
-npm run db:console:prod -- --command="SELECT * FROM users"
+### Manual Database Access
+
+```bash
+# Local database
+wrangler d1 execute webapp-production --local --command="SELECT * FROM users LIMIT 5"
+
+# Production database
+wrangler d1 execute webapp-production --command="SELECT COUNT(*) FROM users"
 ```
 
 ---
 
-## 🚀 Deployment Status
+## 🔌 API Integrations
 
-### Current Status
-✅ **Active** - Running on Cloudflare Pages sandbox
+### Required APIs
 
-### Deployment Steps (Production)
-
-1. **Setup Cloudflare API**
-   ```bash
-   # Configure API key first
-   # (Use setup_cloudflare_api_key tool)
-   ```
-
-2. **Create Production Database**
-   ```bash
-   npx wrangler d1 create webapp-production
-   # Copy database_id to wrangler.jsonc
-   ```
-
-3. **Apply Migrations**
-   ```bash
-   npm run db:migrate:prod
-   ```
-
-4. **Deploy to Cloudflare Pages**
-   ```bash
-   npm run deploy:prod
-   ```
-
-5. **Set Environment Secrets**
-   ```bash
-   npx wrangler pages secret put TELEGRAM_BOT_TOKEN --project-name webapp
-   npx wrangler pages secret put WEATHER_API_KEY --project-name webapp
-   ```
-
----
-
-## 📌 Recommended Next Steps
-
-### Phase 1: Core Integration (Week 1-2)
-1. Integrate Weather API (OpenWeatherMap)
-2. Setup Telegram Bot webhook
-3. Implement basic command system
-4. Test message delivery
-
-### Phase 2: News & Automation (Week 3-4)
-1. Integrate News RSS feeds
-2. Setup Cloudflare Cron Triggers
-3. Implement scheduled message delivery
-4. Add retry logic for failed messages
-
-### Phase 3: WhatsApp & Polish (Week 5-6)
-1. Setup WhatsApp Business API
-2. Create message templates
-3. Implement WhatsApp delivery
-4. Admin panel improvements
-
-### Phase 4: Monetization (Week 7-8)
-1. Integrate Stripe payments
-2. Implement subscription flow
-3. Add trial expiry enforcement
-4. Marketing & launch preparation
-
----
-
-## 🐛 Known Issues & Limitations
-
-### Current Limitations
-1. Weather API not yet connected (using mock data)
-2. News feed not yet integrated (using mock data)
-3. Telegram bot not created (webhook endpoint ready)
-4. WhatsApp disabled (integration ready, waiting for activation)
-5. No payment gateway (Stripe integration pending)
-6. Scheduled delivery not active (cron triggers not setup)
-
-### Future Improvements
-- Add more languages (Spanish, French, Arabic)
-- Support multiple cities per user
-- Custom schedule per notification type
-- Push notifications for severe weather
-- News category filtering
-- Export user data feature
-- Two-factor authentication
-
----
-
-## 📄 License & Credits
-
-Built with modern serverless technology:
-- **Hono Framework** - Ultra-fast web framework
-- **Cloudflare Pages** - Global edge deployment
-- **TailwindCSS** - Utility-first styling
-- **Font Awesome** - Beautiful icons
-
----
-
-## 📞 Support & Contact
-
-For technical support or business inquiries, users can reach out through the website contact form or admin panel.
-
----
-
-**Last Updated**: 2025-11-05  
-**Version**: 1.0.0 (MVP)  
-**Status**: ✅ Core features complete, ready for API integration
-
----
-
-## 🔐 ADMIN ACCESS (NEW!)
-
-### Admin Login Credentials
-- **URL**: `/admin`
-- **Username**: `admin`
-- **Password**: `admin123`
-
-### Admin Features
-✅ **Secure Authentication** - Login required for admin panel  
-✅ **API Key Management** - Save Telegram & Weather API keys  
-✅ **API Testing System** - Test APIs before deployment  
-✅ **Real-time Logging** - Track all API calls and tests  
-✅ **User Management** - View all registered users  
-✅ **System Stats** - Dashboard with key metrics  
-
----
-
-## 🧪 API TESTING SYSTEM (NEW!)
-
-### Working APIs
-
-#### ✅ Telegram Bot API (TESTED & WORKING!)
-- **Bot Name**: Aivra Weather & News Bot
-- **Username**: @AivraSols_bot
-- **Token**: `8492433968:AAFQownK5mneU8d5SdLF7LfOuxSKWAEYX3s`
-- **Status**: ✅ ACTIVE
-- **Test Result**: 
-  ```json
-  {
-    "success": true,
-    "bot_id": 8492433968,
-    "bot_name": "Aivra Weather & News Bot",
-    "username": "AivraSols_bot"
-  }
+#### 1. Telegram Bot API
+- **Purpose**: Bot communication
+- **Get Token**: [@BotFather](https://t.me/botfather)
+- **Cost**: Free
+- **Setup**: 
+  ```
+  /newbot
+  Follow prompts to get token
   ```
 
-#### ⚠️ Weather API (KEY INVALID)
-- **Provider**: OpenWeatherMap
-- **Current Key**: `b31456e99dabf0b590e4a4ef0b0e3a1e`
-- **Status**: ❌ INVALID
-- **Error**: "Invalid API key"
-- **Action Required**: Get new API key from https://openweathermap.org/api
+#### 2. OpenWeatherMap API
+- **Purpose**: Weather data
+- **Get Key**: [OpenWeatherMap](https://openweathermap.org/api)
+- **Cost**: Free (60 calls/minute)
+- **Features**: Current weather, 5-day forecast, AQI estimates
 
-### How to Test APIs
+#### 3. NewsAPI or GNews
+- **Purpose**: News headlines
+- **NewsAPI**: [newsapi.org](https://newsapi.org)
+- **GNews**: [gnews.io](https://gnews.io)
+- **Cost**: Free tiers available
+- **Recommendation**: Use GNews for better country coverage
 
-1. **Login to Admin Panel**:
-   ```
-   Username: admin
-   Password: admin123
-   ```
+#### 4. Google Gemini AI (Optional)
+- **Purpose**: AI weather recommendations
+- **Get Key**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Cost**: Free tier (60 requests/minute)
+- **Features**: Personalized safety advice, activity suggestions
 
-2. **Navigate to API Configuration**
+### API Configuration in Admin Panel
 
-3. **Enter API Keys**:
-   - Telegram Bot Token
-   - Weather API Key
-   - WhatsApp credentials (optional)
-
-4. **Click "Test Connection"** buttons
-
-5. **View Test Results** in:
-   - Real-time response
-   - API Logs section
-
-### API Endpoints
-
-#### Admin Authentication
-- `POST /api/admin/auth/login` - Admin login
-- `POST /api/admin/auth/logout` - Admin logout
-- `GET /api/admin/auth/check` - Check session
-
-#### API Testing
-- `POST /api/admin/test/telegram` - Test Telegram bot
-- `POST /api/admin/test/weather` - Test Weather API
-- `POST /api/admin/test/send-message` - Send test message
-- `POST /api/admin/test/get-weather` - Get weather for city
-
-#### Settings & Logs
-- `GET /api/admin/settings` - Get all settings
-- `POST /api/admin/settings` - Save settings
-- `GET /api/admin/logs` - Get API logs
-- `GET /api/admin/logs?api=telegram` - Filter logs by API
+1. Navigate to `/admin` and login
+2. Go to **API Configuration** section
+3. Enter API keys in respective fields
+4. Click **Test** to verify each key
+5. Click **Save** to store in database
+6. Keys are stored encrypted in Cloudflare D1
 
 ---
 
-## 📊 API LOGGING SYSTEM
+## 🤖 Bot Commands
 
-All API calls are automatically logged to database:
+### Weather Commands
 
-```sql
-SELECT * FROM api_logs ORDER BY created_at DESC LIMIT 10;
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/start` | Welcome message and bot info | `/start` |
+| `/weather` | Your local weather + AI advice | `/weather` |
+| `/checkweather` | Check any city worldwide + AI | `/checkweather London` |
+| `/6hour` | Next 6 hours forecast + AI | `/6hour` |
+| `/hourly` | 24-hour forecast + AI | `/hourly` |
+| `/tomorrow` | Tomorrow's weather + AI | `/tomorrow` |
+| `/forecast` | 7-day forecast with AQI + AI | `/forecast` |
+| `/wind` | Wind speed and direction | `/wind` |
+| `/humidity` | Humidity and air quality | `/humidity` |
+| `/sunrise` | Sunrise/sunset times | `/sunrise` |
+
+### News Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/news` | Top headlines for your country | `/news` |
+| `/checknews` | News from any country | `/checknews Pakistan` |
+| `/topnews` | Breaking news by country | `/topnews India` |
+| `/search` | Search news by topic | `/search technology` |
+| `/sports` | Sports news ⚽ | `/sports` |
+| `/tech` | Technology news 💻 | `/tech` |
+| `/business` | Business & finance 💼 | `/business` |
+| `/entertainment` | Entertainment news 🎬 | `/entertainment` |
+| `/health` | Health & medical 🏥 | `/health` |
+| `/science` | Science news 🔬 | `/science` |
+
+### Account Commands
+
+| Command | Description |
+|---------|-------------|
+| `/settings` | View your account settings |
+| `/help` | Complete help guide |
+
+---
+
+## 📁 Project Structure
+
 ```
-
-**Log Fields:**
-- `api_name` - telegram, weather, whatsapp
-- `action` - test_connection, send_message, get_weather
-- `success` - 1 (success) or 0 (failure)
-- `details` - JSON response data
-- `error_message` - Error if failed
-- `created_at` - Timestamp
-
-**Example Logs:**
-```
-ID | API       | Action          | Success | Details
-1  | telegram  | test_connection | ✅ 1    | {"bot_name":"Aivra..."}
-2  | weather   | test_connection | ❌ 0    | "Invalid API key"
+Weather-and-news-bot---Saas/
+├── src/
+│   ├── index.tsx                 # Main application entry
+│   ├── routes/
+│   │   ├── webhook.ts            # Telegram webhook handler (ALL weather commands)
+│   │   ├── admin.tsx             # Admin dashboard UI
+│   │   ├── admin-api.ts          # Admin API endpoints (+ sales-stats)
+│   │   ├── auth.tsx              # Authentication routes
+│   │   └── user-dashboard.tsx    # User dashboard
+│   ├── lib/
+│   │   ├── integrations.ts       # API integrations (Weather, News, Gemini AI, calculateAQI)
+│   │   ├── utils.ts              # Utility functions
+│   │   ├── scheduler.ts          # Cron job scheduler
+│   │   └── pricing.ts            # License key generation
+│   └── types/
+│       └── index.ts              # TypeScript type definitions
+├── public/
+│   └── static/
+│       ├── admin-v5.js           # Admin panel JavaScript
+│       ├── dashboard.html        # User dashboard HTML
+│       ├── styles.css            # Custom styles
+│       └── utils.js              # Frontend utilities
+├── migrations/
+│   └── 0001_initial_schema.sql   # Database migrations
+├── dist/                         # Build output (generated)
+├── .wrangler/                    # Local D1 database (generated)
+├── wrangler.jsonc                # Cloudflare configuration
+├── ecosystem.config.cjs          # PM2 configuration
+├── package.json                  # Dependencies and scripts
+├── vite.config.ts                # Vite build config
+├── tsconfig.json                 # TypeScript config
+├── .gitignore                    # Git ignore rules
+├── .dev.vars                     # Local environment variables (create this)
+├── README.md                     # This file
+├── CHANGES_SUMMARY.md            # Recent changes documentation
+└── test-ai-output.md             # AI output format examples
 ```
 
 ---
 
-## 🚀 QUICK START WITH APIs
+## 🐛 Troubleshooting
 
-### 1. Setup Telegram Bot
+### Common Issues
+
+#### 1. Port 3000 Already in Use
+
 ```bash
-# Bot is already configured!
-Bot Name: Aivra Weather & News Bot
-Username: @AivraSols_bot
-Token: 8492433968:AAFQownK5mneU8d5SdLF7LfOuxSKWAEYX3s
+# Kill process on port 3000
+npm run clean-port
+
+# Or manually
+fuser -k 3000/tcp
+
+# Or with PM2
+pm2 delete webapp
 ```
 
-### 2. Get Weather API Key
+#### 2. Database Not Found
+
 ```bash
-# Go to: https://openweathermap.org/api
-# Sign up for free account
-# Get API key from dashboard
-# Replace in admin panel
+# Reset and recreate local database
+npm run db:reset
+
+# Check if database exists
+npx wrangler d1 list
 ```
 
-### 3. Test Everything
+#### 3. AI Recommendations Not Showing
+
+**Check Gemini API Key**:
 ```bash
-# 1. Login to admin panel
-curl -X POST http://localhost:3000/api/admin/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+# Verify key is configured
+npx wrangler d1 execute webapp-production --local \
+  --command="SELECT setting_key, is_enabled FROM api_settings WHERE setting_key = 'gemini_api_key'"
+```
 
-# 2. Test Telegram (using cookie)
-curl -X POST http://localhost:3000/api/admin/test/telegram \
-  -H "Content-Type: application/json" \
-  -b cookies.txt \
-  -d '{"token":"YOUR_TOKEN"}'
+**Test Gemini API**:
+- Go to `/admin` dashboard
+- Click **Test** next to Gemini AI
+- Should return success message
 
-# 3. Test Weather
-curl -X POST http://localhost:3000/api/admin/test/weather \
-  -H "Content-Type: application/json" \
-  -b cookies.txt \
-  -d '{"apiKey":"YOUR_KEY"}'
+**Verify User Has Location**:
+- Users must have city/country configured in dashboard
+- Check in admin panel under User Management
+
+#### 4. Telegram Webhook Not Working
+
+```bash
+# Check webhook status
+curl "https://api.telegram.org/bot<YOUR_TOKEN>/getWebhookInfo"
+
+# Remove webhook (for local testing)
+curl "https://api.telegram.org/bot<YOUR_TOKEN>/deleteWebhook"
+
+# Set webhook
+curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
+  -d "url=https://your-domain.com/webhook/telegram"
+```
+
+#### 5. Build Errors
+
+```bash
+# Clean and rebuild
+rm -rf dist .wrangler/state node_modules
+npm install
+npm run build
+```
+
+#### 6. PM2 Service Not Starting
+
+```bash
+# Check PM2 logs
+pm2 logs webapp --lines 50
+
+# Restart service
+pm2 restart webapp
+
+# Delete and recreate
+pm2 delete webapp
+npm run clean-port
+npm run build
+pm2 start ecosystem.config.cjs
+```
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+# Check wrangler logs
+pm2 logs webapp --nostream --lines 100
+
+# Check for errors
+pm2 logs webapp --nostream | grep -i "error\|fail"
+
+# Monitor in real-time
+pm2 logs webapp
 ```
 
 ---
 
-## 📈 COMPLETION STATUS (UPDATED)
+## 🤝 Contributing
 
-| Component | Status | Quality |
-|-----------|--------|---------|
-| Landing Page | ✅ | ⭐⭐⭐⭐⭐ |
-| Authentication | ✅ | ⭐⭐⭐⭐⭐ |
-| Dashboard UI | ✅ | ⭐⭐⭐⭐⭐ |
-| **Admin Auth** | ✅ NEW! | ⭐⭐⭐⭐⭐ |
-| **Admin Panel** | ✅ IMPROVED! | ⭐⭐⭐⭐⭐ |
-| **Telegram Bot** | ✅ WORKING! | ⭐⭐⭐⭐⭐ |
-| **Weather API** | 🔑 Needs Key | ⭐⭐⭐⭐ |
-| **API Testing** | ✅ NEW! | ⭐⭐⭐⭐⭐ |
-| **API Logging** | ✅ NEW! | ⭐⭐⭐⭐⭐ |
-| Database | ✅ | ⭐⭐⭐⭐⭐ |
+Contributions are welcome! Please follow these guidelines:
 
-**Overall: 98% Complete** ✅
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
----
+### Development Guidelines
 
-## 🎯 WHAT'S WORKING NOW
-
-### ✅ Fully Functional
-1. **Admin Authentication** - Secure login required
-2. **API Key Management** - Save/update all API keys
-3. **Telegram Bot Integration** - TESTED & WORKING!
-4. **API Testing System** - Test before deployment
-5. **Comprehensive Logging** - Track all API calls
-6. **User Dashboard** - Full UI with autocomplete
-7. **Database System** - D1 with migrations
-8. **Professional UI** - Gradients, animations, toast
-
-### 🔑 Needs Configuration
-1. **Weather API Key** - Current key invalid (get from OpenWeatherMap)
-2. **WhatsApp** - Optional (can enable from admin panel)
-
-### 📝 Next Steps
-1. Get valid Weather API key
-2. Enable message scheduling (Cloudflare Cron)
-3. Add payment gateway (Stripe)
-4. Deploy to production
+- Follow TypeScript best practices
+- Maintain existing code style
+- Add comments for complex logic
+- Update README for new features
+- Test thoroughly before submitting PR
 
 ---
 
-## 🐛 TROUBLESHOOTING
+## 📄 License
 
-### Admin Panel Not Saving Settings?
-**FIXED!** ✅ Now working properly with:
-- Proper authentication
-- Database transactions
-- Error logging
-
-### Telegram Test Failing?
-**WORKING!** ✅ Bot successfully connected:
-- Bot ID: 8492433968
-- Username: @AivraSols_bot
-
-### Weather API Failing?
-**ACTION REQUIRED:** Get new API key from:
-https://openweathermap.org/api
-- Free tier: 1000 calls/day
-- Sign up takes 2 minutes
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
----
+## 👨‍💻 Author
 
-## 🎉 LATEST FIXES (2025-11-05 Evening)
-
-### ✅ Admin Panel JavaScript Errors FIXED!
-**Problem**: All admin panel buttons were broken due to JavaScript syntax errors
-- Error: "Uncaught SyntaxError: Invalid regular expression: missing /"
-- Error: "testNews is not defined", "testTelegram is not defined"
-- Stats showing 0, no buttons working
-
-**Solution**: Fixed all template literal syntax issues
-- Converted 705 lines of JavaScript from template literals (`backtick strings`) to string concatenation
-- Fixed 10+ innerHTML assignments with complex template literals
-- Fixed `.map()` operations for users table, logs table, and news headlines
-- Removed all escaped quotes and backticks that were breaking syntax
-
-**Result**: 
-✅ All admin panel buttons now work perfectly
-✅ JavaScript functions properly defined
-✅ Stats display correctly
-✅ Test buttons functional (testTelegram, testNews, testWeather, testGemini)
-
-### ✅ GNews API Integration Complete!
-**New Feature**: Added GNews API support for ALL countries
-- **Free Tier**: 100 requests/day
-- **Coverage**: ALL countries including Pakistan, India, etc.
-- **Commands**: `/news Country` and `/checknews Country`
-- **Test Button**: Added in admin panel
-
-**GNews Features**:
-- Supports countries NewsAPI doesn't (like Pakistan)
-- Better country coverage than NewsAPI
-- Free API key from: https://gnews.io
-- Fallback system: GNews → NewsAPI → Error
-
-### ✅ Telegram Commands Enhanced
-**New Commands**:
-- `/checkweather City` - Check weather for any city worldwide
-- `/news Country` - Get news from specific country
-- `/checknews Country` - Alternative news command
-
-**Improved Formatting**:
-- Beautiful emoji formatting in all messages
-- Proper error messages
-- Help text with examples
-- Professional message structure
-
-### ✅ Bug Fixes
-1. **Telegram Disable Fixed** - Users no longer receive updates when disabled
-2. **Toast Messages Fixed** - Changed CSS class from `toast-${type}` to `toast ${type}`
-3. **Gemini API Fixed** - Changed endpoint from `v1/models` to `v1beta/models/gemini-2.5-flash`
-4. **NewsAPI User-Agent Fixed** - Added 'User-Agent': 'AlertFlow/1.0' header
-
-### 🔄 Pending: WhatsApp Business Cloud API
-**Status**: Ready to implement
-**Platform**: Facebook's official WhatsApp Business Cloud API
-**Requirements**: 
-- Facebook Developer account
-- WhatsApp Business verification
-- Phone number verification
-- Webhook setup
+**Awais** - [GitHub](https://github.com/awais-webs67)
 
 ---
 
----
+## 🙏 Acknowledgments
 
-## 🎯 COMPLETED TODOS (2025-11-05 Final)
-
-### ✅ All 5 Todos Completed:
-1. ✅ **Fix API save functionality** - Settings wrapper implemented
-2. ✅ **Add all missing APIs** - Telegram, Weather, News, GNews, Gemini all included
-3. ✅ **Create modern professional UI** - Purple gradient + glass morphism
-4. ✅ **Add user management** - Full CRUD with modal interface
-5. ✅ **Remove version banner** - Clean professional look achieved
+- [Hono Framework](https://hono.dev) - Lightweight web framework
+- [Cloudflare Workers](https://workers.cloudflare.com) - Edge computing platform
+- [OpenWeatherMap](https://openweathermap.org) - Weather data API
+- [Telegram Bot API](https://core.telegram.org/bots/api) - Bot platform
+- [Google Gemini AI](https://ai.google.dev) - AI-powered recommendations
+- [TailwindCSS](https://tailwindcss.com) - CSS framework
 
 ---
 
-**Last Updated**: 2025-11-05 Final  
-**Version**: 4.0.0 (Complete Rewrite - Professional Admin Panel!)  
-**Status**: ✅ ALL FEATURES WORKING - Production Ready!
+## 📞 Support
+
+For issues and questions:
+
+- **GitHub Issues**: [Create an issue](https://github.com/awais-webs67/Weather-and-news-bot---Saas/issues)
+- **Telegram**: @awais_webs (for urgent support)
+- **Email**: support@alertflow.com
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] WhatsApp integration
+- [ ] SMS notifications
+- [ ] Mobile app (React Native)
+- [ ] Advanced AI features
+- [ ] Multi-language support (expand beyond EN/UR)
+- [ ] Weather alerts and warnings
+- [ ] Custom notification schedules
+- [ ] Integration with calendar apps
+
+---
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star! ⭐
+
+---
+
+**Made with ❤️ by Awais**

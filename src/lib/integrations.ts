@@ -662,6 +662,53 @@ export function formatNewsMessage(articles: any[], language: string = 'en'): str
   return message.trim()
 }
 
+// Helper function to calculate AQI from weather data
+export function calculateAQI(weatherData: any): { value: number; label: string; full: string } {
+  const humidity = weatherData.humidity || 50
+  const windSpeed = weatherData.wind_speed || 5
+  const visibility = weatherData.visibility || 10000
+  
+  // Calculate AQI value (0-500 scale)
+  let aqiValue = 50 // Default moderate
+  
+  // Visibility impact (40% weight)
+  if (visibility >= 10000) aqiValue += 0
+  else if (visibility >= 8000) aqiValue += 10
+  else if (visibility >= 5000) aqiValue += 30
+  else if (visibility >= 3000) aqiValue += 60
+  else if (visibility >= 1000) aqiValue += 100
+  else aqiValue += 150
+  
+  // Humidity impact (30% weight)
+  if (humidity < 30) aqiValue += 15
+  else if (humidity < 60) aqiValue += 5
+  else if (humidity < 80) aqiValue += 20
+  else aqiValue += 40
+  
+  // Wind impact (30% weight) - wind clears pollutants
+  if (windSpeed > 5) aqiValue -= 10
+  else if (windSpeed > 3) aqiValue -= 5
+  else if (windSpeed < 1) aqiValue += 20
+  
+  // Ensure within bounds
+  aqiValue = Math.max(0, Math.min(500, Math.round(aqiValue)))
+  
+  // Determine label
+  let label = ''
+  if (aqiValue <= 50) label = 'Excellent'
+  else if (aqiValue <= 100) label = 'Good'
+  else if (aqiValue <= 150) label = 'Moderate'
+  else if (aqiValue <= 200) label = 'Unhealthy'
+  else if (aqiValue <= 300) label = 'Very Unhealthy'
+  else label = 'Hazardous'
+  
+  return {
+    value: aqiValue,
+    label: label,
+    full: `${aqiValue} - ${label}`
+  }
+}
+
 // Gemini API for AI-powered weather analysis and precautions
 export class GeminiAPI {
   private apiKey: string
@@ -734,15 +781,37 @@ Keep each point under 15 words. Focus on actionable advice.`
     const windSpeed = weatherData.wind_speed || 5
     const visibility = weatherData.visibility || 10000
     
-    // Simple estimation logic
-    if (visibility > 8000 && windSpeed > 3 && humidity < 70) {
-      return 'Good (0-50)'
-    } else if (visibility > 5000 && windSpeed > 2) {
-      return 'Moderate (51-100)'
-    } else if (visibility > 3000) {
-      return 'Unhealthy for Sensitive Groups (101-150)'
-    } else {
-      return 'Unhealthy (151-200)'
-    }
+    // Calculate AQI value (0-500 scale)
+    let aqiValue = 50 // Default moderate
+    
+    // Visibility impact (40% weight)
+    if (visibility >= 10000) aqiValue += 0
+    else if (visibility >= 8000) aqiValue += 10
+    else if (visibility >= 5000) aqiValue += 30
+    else if (visibility >= 3000) aqiValue += 60
+    else if (visibility >= 1000) aqiValue += 100
+    else aqiValue += 150
+    
+    // Humidity impact (30% weight)
+    if (humidity < 30) aqiValue += 15
+    else if (humidity < 60) aqiValue += 5
+    else if (humidity < 80) aqiValue += 20
+    else aqiValue += 40
+    
+    // Wind impact (30% weight) - wind clears pollutants
+    if (windSpeed > 5) aqiValue -= 10
+    else if (windSpeed > 3) aqiValue -= 5
+    else if (windSpeed < 1) aqiValue += 20
+    
+    // Ensure within bounds
+    aqiValue = Math.max(0, Math.min(500, aqiValue))
+    
+    // Return with descriptive label
+    if (aqiValue <= 50) return `${aqiValue} - Excellent`
+    else if (aqiValue <= 100) return `${aqiValue} - Good`
+    else if (aqiValue <= 150) return `${aqiValue} - Moderate`
+    else if (aqiValue <= 200) return `${aqiValue} - Unhealthy`
+    else if (aqiValue <= 300) return `${aqiValue} - Very Unhealthy`
+    else return `${aqiValue} - Hazardous`
   }
 }
