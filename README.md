@@ -539,7 +539,8 @@ Weather-and-news-bot---Saas/
 │       └── index.ts              # TypeScript type definitions
 ├── public/
 │   └── static/
-│       ├── admin-v5.js           # Admin panel JavaScript
+│       ├── admin-login.html      # Admin login page
+│       ├── admin-panel.js        # Admin panel JavaScript
 │       ├── dashboard.html        # User dashboard HTML
 │       ├── styles.css            # Custom styles
 │       └── utils.js              # Frontend utilities
@@ -554,9 +555,7 @@ Weather-and-news-bot---Saas/
 ├── tsconfig.json                 # TypeScript config
 ├── .gitignore                    # Git ignore rules
 ├── .dev.vars                     # Local environment variables (create this)
-├── README.md                     # This file
-├── CHANGES_SUMMARY.md            # Recent changes documentation
-└── test-ai-output.md             # AI output format examples
+└── README.md                     # This file
 ```
 
 ---
