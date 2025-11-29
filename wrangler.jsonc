@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
+  "name": "alertflow-weather-bot",
   "compatibility_date": "2025-11-05",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
@@ -12,8 +12,5 @@
       "database_name": "webapp-production",
       "database_id": "local-db-for-development"
     }
-  ],
-  "triggers": {
-    "crons": ["* * * * *"]
-  }
+  ]
 }
